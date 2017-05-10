@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class Sample(object):
     """common class for all samples. that is the vector of scores describing a sample and its unique identifier case and gene.
-    
+
     Attributes:
         case: The ID of the case to which the vector belongs as a string.
         gene: The name of the gene this vector describes as a string.
@@ -34,7 +34,7 @@ class Sample(object):
         pedia: an attribute to hold the PEDIA score as a float (initially it is -5)
         extom: an attribute to hold the extom score based on patients symptoms and exome (no biometry)
     """
-    
+
     def __init__(self, case='?', gene='?', gestalt=0, feature=0, cadd_phred=0, phenomizer=0, boqa=0, pathogenicity=0, pedia=-5, extom=-5):
         self.case = case
         self.gene = gene
@@ -46,7 +46,7 @@ class Sample(object):
         self.pathogenicity = pathogenicity
         self.pedia = pedia
         self.extom = extom
-        
+
     def classify(self):
         """a function to classify a sample using the classifier and the scaler provided in the respective pkl-files
         """
@@ -54,230 +54,228 @@ class Sample(object):
         scaler = joblib.load('pedia_scaler.pkl')
         smpl.pedia = float(clf.decision_function(scaler.transform(np.array([smpl.gestalt, smpl.feature , smpl.cadd_phred, smpl.phenomizer, smpl.boqa]))))
         print(smpl.pedia)
-        
-        
+
+
 class Data:
     """Common class for a list of instances of the class Samples
-    
+
     Attributes:
         name: name of the data as a string
         samples: a list of samples as instances of class Sample
         casedisgene: a list of lists [[case,gene]] containing each case in samples and the respective disease causing gene
     """
 
-    
+
     def __init__(self, samples=[], casedisgene=[]):
         #self.name = name
         self.samples = list(samples)
         self.casedisgene = casedisgene
 
-        
+
     def load(self, path):
         """ loads the samples attribute with the information of the json files in the same directory as instances of the class Samples"""
         print('loading data')
-        cwd = os.getcwd()
-        os.chdir(path)
-        for i in os.listdir():
-            if i[-5:]=='.json' and i[:-5]!='34159' and i[:-5]!='40536':
-                file=i
-                print(file)
-                vectors={}
-                with open(file) as json_data:
+        for file_name in os.listdir(path):
+            if file_name.endswith(".json") and file_name != '34159.json' and file_name != '40536.json':
+                file_name = os.path.join(path, file_name)
+                vectors = {}
+                with open(file_name, encoding='utf-8', errors='ignore') as json_data:
                     data = json.load(json_data)
-                    pathogene='?'
+                    pathogene = '?'
                     #gene_omimID='?'
-                    if len(data['genomicData'])>0:
+                    if len(data['genomicData']) >0:
                         if 'Gene Name' in data['genomicData'][0]['Test Information']:
-                            pathogene=data['genomicData'][0]['Test Information']['Gene Name']
-                            if pathogene=='MLL2': pathogene='KMT2D'
-                            elif pathogene=='MLL': pathogene='KMT2A'
-                            elif pathogene=='B3GALTL': pathogene='B3GLTC'
-                            elif pathogene=='CASKIN1':
-                                pathogene='KIAA1306'
+                            pathogene = data['genomicData'][0]['Test Information']['Gene Name']
+                            if pathogene == 'MLL2':
+                                pathogene = 'KMT2D'
+                            elif pathogene == 'MLL':
+                                pathogene = 'KMT2A'
+                            elif pathogene == 'B3GALTL':
+                                pathogene = 'B3GLTC'
+                            elif pathogene == 'CASKIN1':
+                                pathogene = 'KIAA1306'
                             #gene_omimID=data['genomicData'][0]['Test Information']['Gene Name']
-                    case=data['case_id']
+                    case = data['case_id']
                     for entry in data['geneList']:
-                        gscore=0 #gestalt score
+                        gscore = 0 #gestalt score
                         if 'gestalt_score' in entry:# and entry['gestalt_score']>0: #sometimes negative; mistake by FDNA?
-                            gscore=entry['gestalt_score']    
-                        fscore=0 #feature score
+                            gscore = entry['gestalt_score']
+                        fscore =0 #feature score
                         if 'feature_score' in entry:#  and entry['feature_score']>0:  #sometimes negative; mistake by FDNA?
-                            fscore=entry['feature_score'] 
-                        vscore=0 #variant score
+                            fscore = entry['feature_score']
+                        vscore = 0 #variant score
                         if 'cadd_phred_score' in entry:
-                            vscore=entry['cadd_phred_score'] 
-                        pscore=0 #phenomizer score
+                            vscore = entry['cadd_phred_score']
+                        pscore = 0 #phenomizer score
                         if 'pheno_score' in entry:
-                            pscore=entry['pheno_score'] 
+                            pscore = entry['pheno_score']
                         bscore=0 #boqa score
                         if 'boqa_score' in entry:
-                            bscore=entry['boqa_score'] 
-                        gene=entry['gene_symbol']
-                        patho=0 #pathogenicity, will serve as class label, 1 is pathogenic mutation; 0 is neutral variant
-                        if gene==pathogene:
-                            patho=1
-                        if pathogene!='?':# and (gscore!=0 or fscore!=0 or vscore!=0 or pscore!=0 or bscore!=0): #nullvectors not allowed
-                            if case+gene in vectors: # if a gene appears several times in the gene List of a case onnly its highest values will be assigned to its Sample
-                                smpl=vectors[case+gene]
+                            bscore = entry['boqa_score']
+                        gene = entry['gene_symbol']
+                        patho = 0 #pathogenicity, will serve as class label, 1 is pathogenic mutation; 0 is neutral variant
+                        if gene == pathogene:
+                            patho = 1
+                        if pathogene != '?':# and (gscore!=0 or fscore!=0 or vscore!=0 or pscore!=0 or bscore!=0): #nullvectors not allowed
+                            if case + gene in vectors: # if a gene appears several times in the gene List of a case onnly its highest values will be assigned to its Sample
+                                smpl = vectors[case + gene]
                                 if gscore > smpl.gestalt:
-                                    smpl.gestalt=gscore
-                                if fscore > smpl.feature: 
-                                    smpl.feature=fscore
+                                    smpl.gestalt = gscore
+                                if fscore > smpl.feature:
+                                    smpl.feature = fscore
                                 if vscore > smpl.cadd_phred:
-                                    smpl.cadd_phred=vscore 
+                                    smpl.cadd_phred = vscore
                                 if pscore > smpl.phenomizer:
-                                    smpl.phenomizer=pscore
+                                    smpl.phenomizer = pscore
                                 if bscore > smpl.boqa:
-                                    smpl.boqa=bscore 
-                            if case+gene not in vectors:
-                                vectors[case+gene]=Sample(case=case, gene=gene, gestalt=gscore, feature=fscore, cadd_phred=vscore, phenomizer=pscore, boqa=bscore, pathogenicity=patho)
+                                    smpl.boqa = bscore
+                            if case + gene not in vectors:
+                                vectors[case+gene] = Sample(case = case, gene = gene, gestalt = gscore, feature = fscore, cadd_phred = vscore, phenomizer = pscore, boqa = bscore, pathogenicity = patho)
                 for vector in vectors:
                     self.samples.append(vectors[vector]) #loads samples with instances ofthe class Sample
         casedisgene=[]
         cases=[]
         for smpl in self.samples:
-            if smpl.pathogenicity==1:
+            if smpl.pathogenicity == 1:
                 casedisgene.append([smpl.case, smpl.gene])
                 cases.append(smpl.case)
         for smpl in self.samples:
             if smpl.case not in cases:
                 cases.append(smpl.case)
-                casedisgene.append([smpl.case,'healthy?'])
+                casedisgene.append([smpl.case, 'healthy?'])
         self.casedisgene = casedisgene
-        os.chdir(cwd)
-        
+
     def load2(self, path):
         """ loads the samples attribute with the information of the json files in the same directory as instances of the class Samples"""
         print('loading data')
-        cwd = os.getcwd()
-        os.chdir(path)
-        for i in os.listdir():
-            if i[-5:]=='.json' and i[:-5]!='34159' and i[:-5]!='40536':
-                file=i
-                print(file)
-                vectors={}
-                with open(file) as json_data:
+        for file_name in os.listdir():
+            if file_name.endswith(".json") and file_name != '34159.json' and file_name != '40536.json':
+                file_name = os.path.join(path, file_name)
+                vectors = {}
+                with open(file_name, encoding = 'utf-8', errors = 'ignore') as json_data:
                     data = json.load(json_data)
                     pathogene='?'
                     #gene_omimID='?'
                     if len(data['genomicData'])>0:
                         if 'Gene Name' in data['genomicData'][0]['Test Information']:
-                            pathogene=data['genomicData'][0]['Test Information']['Gene Name']
-                            if pathogene=='MLL2': pathogene='KMT2D'
-                            elif pathogene=='MLL': pathogene='KMT2A'
-                            elif pathogene=='B3GALTL': pathogene='B3GLTC'
-                            elif pathogene=='CASKIN1':
-                                pathogene='KIAA1306'
+                            pathogene = data['genomicData'][0]['Test Information']['Gene Name']
+                            if pathogene == 'MLL2':
+                                pathogene = 'KMT2D'
+                            elif pathogene == 'MLL':
+                                pathogene = 'KMT2A'
+                            elif pathogene == 'B3GALTL':
+                                pathogene = 'B3GLTC'
+                            elif pathogene == 'CASKIN1':
+                                pathogene = 'KIAA1306'
                             #gene_omimID=data['genomicData'][0]['Test Information']['Gene Name']
-                    case=data['case_id']
+                    case = data['case_id']
                     for entry in data['geneList']:
                         if 'feature_score' in entry or 'pheno_score' in entry or 'boqa_score' in entry or 'cadd_phred_score' in entry :
-                            gscore=0 #gestalt score
+                            gscore = 0 #gestalt score
     #                        if 'gestalt_score' in entry:# and entry['gestalt_score']>0: #sometimes negative; mistake by FDNA?
-    #                            gscore=entry['gestalt_score']    
-                            fscore=0 #feature score
+    #                            gscore=entry['gestalt_score']
+                            fscore = 0 #feature score
                             if 'feature_score' in entry:#  and entry['feature_score']>0:  #sometimes negative; mistake by FDNA?
-                                fscore=entry['feature_score'] 
-                            vscore=0 #variant score
+                                fscore = entry['feature_score']
+                            vscore = 0 #variant score
                             if 'cadd_phred_score' in entry:
-                                vscore=entry['cadd_phred_score'] 
-                            pscore=0 #phenomizer score
+                                vscore = entry['cadd_phred_score']
+                            pscore = 0 #phenomizer score
                             if 'pheno_score' in entry:
-                                pscore=entry['pheno_score'] 
-                            bscore=0 #boqa score
+                                pscore = entry['pheno_score']
+                            bscore = 0 #boqa score
                             if 'boqa_score' in entry:
-                                bscore=entry['boqa_score'] 
-                            gene=entry['gene_symbol']
-                            patho=0 #pathogenicity, will serve as class label, 1 is pathogenic mutation; 0 is neutral variant
-                            if gene==pathogene:
-                                patho=1
-                            if pathogene!='?':# and (gscore!=0 or fscore!=0 or vscore!=0 or pscore!=0 or bscore!=0): #nullvectors not allowed
+                                bscore = entry['boqa_score']
+                            gene = entry['gene_symbol']
+                            patho = 0 #pathogenicity, will serve as class label, 1 is pathogenic mutation; 0 is neutral variant
+                            if gene == pathogene:
+                                patho = 1
+                            if pathogene != '?':# and (gscore!=0 or fscore!=0 or vscore!=0 or pscore!=0 or bscore!=0): #nullvectors not allowed
                                 if case+gene in vectors: # if a gene appears several times in the gene List of a case onnly its highest values will be assigned to its Sample
-                                    smpl=vectors[case+gene]
+                                    smpl=vectors[case + gene]
                                     if gscore > smpl.gestalt:
-                                        smpl.gestalt=gscore
-                                    if fscore > smpl.feature: 
-                                        smpl.feature=fscore
+                                        smpl.gestalt = gscore
+                                    if fscore > smpl.feature:
+                                        smpl.feature = fscore
                                     if vscore > smpl.cadd_phred:
-                                        smpl.cadd_phred=vscore 
+                                        smpl.cadd_phred = vscore
                                     if pscore > smpl.phenomizer:
-                                        smpl.phenomizer=pscore
+                                        smpl.phenomizer = pscore
                                     if bscore > smpl.boqa:
-                                        smpl.boqa=bscore 
-                                if case+gene not in vectors:
-                                    vectors[case+gene]=Sample(case=case, gene=gene, gestalt=gscore, feature=fscore, cadd_phred=vscore, phenomizer=pscore, boqa=bscore, pathogenicity=patho)
+                                        smpl.boqa = bscore
+                                if case + gene not in vectors:
+                                    vectors[case + gene] = Sample(case = case, gene = gene, gestalt = gscore, feature = fscore, cadd_phred = vscore, phenomizer = pscore, boqa = bscore, pathogenicity = patho)
                 for vector in vectors:
                     self.samples.append(vectors[vector]) #loads samples with instances ofthe class Sample
-        casedisgene=[]
-        cases=[]
+        casedisgene = []
+        cases = []
         for smpl in self.samples:
-            if smpl.pathogenicity==1:
+            if smpl.pathogenicity == 1:
                 casedisgene.append([smpl.case, smpl.gene])
                 cases.append(smpl.case)
         for smpl in self.samples:
             if smpl.case not in cases:
                 cases.append(smpl.case)
-                casedisgene.append([smpl.case,'healthy?'])
+                casedisgene.append([smpl.case, 'healthy?'])
         self.casedisgene = casedisgene
-        os.chdir(cwd)
-        
+
     def filter_gestalt(self):
         new_samples=[]
         for smpl in self.samples:
             if smpl.feature!=0 or smpl.cadd_phred!=0 or smpl.phenomizer!=0 or smpl.boqa!=0:
                 new_samples.append(smpl)
         self.samples = new_samples
-        
+
     def filter_cadd(self):
         new_samples=[]
         for smpl in self.samples:
             if smpl.feature!=0 or smpl.gestalt!=0 or smpl.phenomizer!=0 or smpl.boqa!=0:
                 new_samples.append(smpl)
         self.samples = new_samples
-        
+
     def filter_cadd_gestalt(self):
         new_samples=[]
         for smpl in self.samples:
             if smpl.feature!=0 or smpl.phenomizer!=0 or smpl.boqa!=0:
                 new_samples.append(smpl)
         self.samples = new_samples
-                
+
     def threshold(self, value, score='gestalt'):
         for smpl in self.samples:
             if getattr(smpl, score)<value:
                 setattr(smpl, score, 0)
-                
-        
-    
+
+
+
     def numhit(self, num):
         """ filters self.samples for only those samples that have num scores featuring values higher than 0, self.samples will be adjusted accordingly"""
-        newsamples=[]
+        newsamples = []
         for smpl in self.samples:
-            num_scores=0
-            if smpl.gestalt!=0:
-                num_scores+=1
-            if smpl.feature!=0:
-                num_scores+=1
-            if smpl.cadd_phred>0:
-                num_scores+=1
-            if smpl.phenomizer>0:
-                num_scores+=1
-            if smpl.boqa>0:
-                num_scores+=1
-            if num_scores>=num:
+            num_scores = 0
+            if smpl.gestalt != 0:
+                num_scores += 1
+            if smpl.feature != 0:
+                num_scores += 1
+            if smpl.cadd_phred > 0:
+                num_scores += 1
+            if smpl.phenomizer > 0:
+                num_scores += 1
+            if smpl.boqa > 0:
+                num_scores += 1
+            if num_scores >= num:
                 newsamples.append(smpl)
-        self.samples=[]         
+        self.samples = []
         self.samples = newsamples
-        
+
     def bucketize_data(self):
         """a function to prepare 10x cross validation, it returns a list of len 10. each list (bucket) will contain case IDs. all case IDs featuring a pathogenic mutation in the same gene will be in the same bucket. The size of the buckets will be as similar as possible"""
-        print('creating 10 buckets - same gene same bucket')             
+        print('creating 10 buckets - same gene same bucket')
         self.casedisgene.sort()
-        buckets=[]
+        buckets = []
         for i in range(10):
-            buckets.append([])        
-        allgenes=[] # a list that will contain the names of all genes that have a pathogenic entry in allscores
-        numgenes=[] #a list that will contain the frequencies by which these genes are pathogentically altered in the data, the indices are corresponding with allgenes
+            buckets.append([])
+        allgenes = [] # a list that will contain the names of all genes that have a pathogenic entry in allscores
+        numgenes = [] #a list that will contain the frequencies by which these genes are pathogentically altered in the data, the indices are corresponding with allgenes
         for entry in self.casedisgene:
             case=entry[0]
             gene=entry[1]
@@ -285,59 +283,59 @@ class Data:
                 allgenes.append(gene)
                 numgenes.append(1)
             elif gene in allgenes: #if a gene is in allgenes already...
-                x=0 # index of that gene
+                x = 0 # index of that gene
                 for i in allgenes:
-                    if i==gene:
-                        numgenes[x]+=1 #...its index in mungenes will be determined and this index will be increased by 1 (frequency +1)
-                    x+=1
-                
+                    if i == gene:
+                        numgenes[x] += 1 #...its index in mungenes will be determined and this index will be increased by 1 (frequency +1)
+                    x += 1
+
         for gene in allgenes:
-            minbucket=len(self.casedisgene)/10+2 #minbucket is the minimal number of IDs in a bucket its initial size is the number of cases in the data divideb by 10 plus 2
+            minbucket = len(self.casedisgene)/10+2 #minbucket is the minimal number of IDs in a bucket its initial size is the number of cases in the data divideb by 10 plus 2
             for bucket in buckets:
-                minbucket=min(len(bucket),minbucket) #minbucket is adjusted to the length of the smallest bucket
+                minbucket = min(len(bucket),minbucket) #minbucket is adjusted to the length of the smallest bucket
             for bucket in buckets:
-                if len(bucket)==minbucket: #(one of) the smallest bucket(s) is selected 
+                if len(bucket) == minbucket: #(one of) the smallest bucket(s) is selected
                     for entry in self.casedisgene:
-                        case=entry[0]
-                        dgene=entry[1]
-                        if dgene==gene:
+                        case = entry[0]
+                        dgene = entry[1]
+                        if dgene == gene:
                             bucket.append(case) #all the case IDs with a pathogenic mutation in a certain gene are added to this bucket
                     break
         #print(buckets)
         return buckets
-        
-    def classify_10xSVM(self, C=1): 
+
+    def classify_10xSVM(self, C = 1):
         """ a 10x validation SVM classification of all samples in the instance of Data. The samples' pedia atrribute will be adjusted accordingly. """
         buckets = self.bucketize_data()
         print('10 x cross validation')
         bn=1 #bucket number
         for bucket in buckets: #10x cross validation, data will be split according to the ID entries in each bucket, that were created by bucketize_data()
             print('computing results for bucket '+str(bn))
-            X=[]
-            y=[]
+            X = []
+            y = []
             for smpl in self.samples:
                 if smpl.case not in bucket: #only the data will be used for training that are of cases that are NOT in the topical bucket
                     X.append([smpl.gestalt,smpl.feature,smpl.cadd_phred,smpl.phenomizer,smpl.boqa]) #feature vector
                     y.append(smpl.pathogenicity) #class labels
-            
-            X=np.array(X) #the clf function needs np arrays
+
+            X = np.array(X) #the clf function needs np arrays
             scaler = preprocessing.MinMaxScaler().fit(X)
-            X=scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
-            y=np.array(y)#the clf function needs np arrays
-        
-            clf = svm.SVC(kernel = 'poly', C=C, degree=2, probability=False, class_weight='balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
-            clf.fit(X,y) 
-        
+            X = scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
+            y = np.array(y)#the clf function needs np arrays
+
+            clf = svm.SVC(kernel = 'poly', C = C, degree=2, probability = False, class_weight = 'balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
+            clf.fit(X, y)
+
             for smpl in self.samples:
                 if smpl.case in bucket: #only those samples are tested with the classifier that ARE in the bucket
                     smpl.pedia = float(clf.decision_function(scaler.transform(np.array([smpl.gestalt, smpl.feature , smpl.cadd_phred, smpl.phenomizer, smpl.boqa]))))
-            bn+=1
-            
-    def save_SVM(self, C=1):
+            bn += 1
+
+    def save_SVM(self, C = 1):
         """ saves the classifier so that it can be reloaded and quickly used for other purposes"""
         print('loading data')
-        X=[]
-        y=[]
+        X = []
+        y = []
         for smpl in self.samples:
             X.append([smpl.gestalt, smpl.feature, smpl.cadd_phred, smpl.phenomizer, smpl.boqa])
             y.append([smpl.pathogenicity])
@@ -346,157 +344,157 @@ class Data:
         X=scaler.transform(X)
         y=np.array(y)
         print('training classifier')
-        clf=svm.SVC(kernel = 'poly', C=C, degree=2, probability=False, class_weight='balanced')
-        clf.fit(X,y)
+        clf=svm.SVC(kernel = 'poly', C = C, degree = 2, probability = False, class_weight = 'balanced')
+        clf.fit(X, y)
         print('saving classifier')
-        joblib.dump(clf, 'pedia_classifier.pkl', compress=9)
+        joblib.dump(clf, 'pedia_classifier.pkl', compress = 9)
         print('saving scaler')
-        joblib.dump(scaler, 'pedia_scaler.pkl', compress=9 )
+        joblib.dump(scaler, 'pedia_scaler.pkl', compress = 9)
         print('done saving')
-        
-        
-        
-            
-    def classify_10xSVM_extom(self): 
+
+
+
+
+    def classify_10xSVM_extom(self):
         """ a 10x validation SVM classification of all samples in the instance of Data. The samples' pedia atrribute will be adjusted accordingly. """
         buckets = self.bucketize_data()
         print('10 x cross validation')
-        bn=1 #bucket number
+        bn = 1 #bucket number
         for bucket in buckets: #10x cross validation, data will be split according to the ID entries in each bucket, that were created by bucketize_data()
-            print('computing results for bucket '+str(bn))
-            X=[]
-            y=[]
+            print('computing results for bucket ' + str(bn))
+            X = []
+            y = []
             for smpl in self.samples:
                 if smpl.case not in bucket: #only the data will be used for training that are of cases that are NOT in the topical bucket
-                    X.append([smpl.feature,smpl.cadd_phred,smpl.phenomizer,smpl.boqa]) #feature vector
+                    X.append([smpl.feature,smpl.cadd_phred, smpl.phenomizer, smpl.boqa]) #feature vector
                     y.append(smpl.pathogenicity) #class labels
-            
-            X=np.array(X) #the clf function needs np arrays
+
+            X = np.array(X) #the clf function needs np arrays
             scaler = preprocessing.MinMaxScaler().fit(X)
-            X=scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
-            y=np.array(y)#the clf function needs np arrays
-        
-            clf = svm.SVC(kernel = 'poly', C=1, degree=2, probability=False, class_weight='balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
-            clf.fit(X,y) 
-        
+            X = scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
+            y = np.array(y)#the clf function needs np arrays
+
+            clf = svm.SVC(kernel = 'poly', C = 1, degree = 2, probability = False, class_weight = 'balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
+            clf.fit(X,y)
+
             for smpl in self.samples:
                 if smpl.case in bucket: #only those samples are tested with the classifier that ARE in the bucket
-                    smpl.extom = float(clf.decision_function(scaler.transform(np.array([smpl.feature , smpl.cadd_phred, smpl.phenomizer, smpl.boqa]))))
-            bn+=1
-            
+                    smpl.extom = float(clf.decision_function(scaler.transform(np.array([smpl.feature, smpl.cadd_phred, smpl.phenomizer, smpl.boqa]))))
+            bn += 1
+
     def classify_10xSVM_sgt(self): #sgt: specific gene testing
         """ a 10x validation SVM classification of all samples in the instance of Data. The samples' pedia atrribute will be adjusted accordingly. """
         buckets = self.bucketize_data()
         print('10 x cross validation')
-        bn=1 #bucket number
+        bn = 1 #bucket number
         for bucket in buckets: #10x cross validation, data will be split according to the ID entries in each bucket, that were created by bucketize_data()
-            print('computing results for bucket '+str(bn))
+            print('computing results for bucket ' + str(bn))
             X=[]
             y=[]
             for smpl in self.samples:
                 if smpl.case not in bucket: #only the data will be used for training that are of cases that are NOT in the topical bucket
-                    X.append([smpl.feature,smpl.gestalt,smpl.phenomizer,smpl.boqa]) #feature vector
+                    X.append([smpl.feature,smpl.gestalt, smpl.phenomizer, smpl.boqa]) #feature vector
                     y.append(smpl.pathogenicity) #class labels
-            
-            X=np.array(X) #the clf function needs np arrays
+
+            X = np.array(X) #the clf function needs np arrays
             scaler = preprocessing.MinMaxScaler().fit(X)
-            X=scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
-            y=np.array(y)#the clf function needs np arrays
-        
-            clf = svm.SVC(kernel = 'poly', C=1, degree=2, probability=False, class_weight='balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
-            clf.fit(X,y) 
-        
+            X = scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
+            y = np.array(y)#the clf function needs np arrays
+
+            clf = svm.SVC(kernel = 'poly', C = 1, degree = 2, probability = False, class_weight = 'balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
+            clf.fit(X, y)
+
             for smpl in self.samples:
                 if smpl.case in bucket: #only those samples are tested with the classifier that ARE in the bucket
-                    smpl.extom = float(clf.decision_function(scaler.transform(np.array([smpl.feature , smpl.gestalt, smpl.phenomizer, smpl.boqa]))))
-            bn+=1
-            
+                    smpl.extom = float(clf.decision_function(scaler.transform(np.array([smpl.feature, smpl.gestalt, smpl.phenomizer, smpl.boqa]))))
+            bn += 1
+
     def classify_10xSVM_sympt(self): #sgt: specific gene testing
         """ a 10x validation SVM classification of all samples in the instance of Data. The samples' pedia atrribute will be adjusted accordingly. """
         buckets = self.bucketize_data()
         print('10 x cross validation')
-        bn=1 #bucket number
+        bn = 1 #bucket number
         for bucket in buckets: #10x cross validation, data will be split according to the ID entries in each bucket, that were created by bucketize_data()
-            print('computing results for bucket '+str(bn))
-            X=[]
-            y=[]
+            print('computing results for bucket ' + str(bn))
+            X = []
+            y = []
             for smpl in self.samples:
                 if smpl.case not in bucket: #only the data will be used for training that are of cases that are NOT in the topical bucket
-                    X.append([smpl.feature,smpl.phenomizer,smpl.boqa]) #feature vector
+                    X.append([smpl.feature,smpl.phenomizer, smpl.boqa]) #feature vector
                     y.append(smpl.pathogenicity) #class labels
-            
-            X=np.array(X) #the clf function needs np arrays
+
+            X = np.array(X) #the clf function needs np arrays
             scaler = preprocessing.MinMaxScaler().fit(X)
-            X=scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
-            y=np.array(y)#the clf function needs np arrays
-        
-            clf = svm.SVC(kernel = 'poly', C=1, degree=2, probability=False, class_weight='balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
-            clf.fit(X,y) 
-        
+            X = scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
+            y = np.array(y)#the clf function needs np arrays
+
+            clf = svm.SVC(kernel = 'poly', C = 1, degree = 2, probability = False, class_weight = 'balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
+            clf.fit(X, y)
+
             for smpl in self.samples:
                 if smpl.case in bucket: #only those samples are tested with the classifier that ARE in the bucket
                     smpl.extom = float(clf.decision_function(scaler.transform(np.array([smpl.feature, smpl.phenomizer, smpl.boqa]))))
-            bn+=1
-            
-    def classify_10xMLP(self): 
+            bn += 1
+
+    def classify_10xMLP(self):
         """ a 10x validation SVM classification of all samples in the instance of Data. The samples' pedia atrribute will be adjusted accordingly. """
         buckets = self.bucketize_data()
         print('10 x cross validation')
-        bn=1 #bucket number
+        bn = 1 #bucket number
         for bucket in buckets: #10x cross validation, data will be split according to the ID entries in each bucket, that were created by bucketize_data()
             print('computing results for bucket '+str(bn))
-            X=[]
-            y=[]
+            X = []
+            y = []
             for smpl in self.samples:
                 if smpl.case not in bucket: #only the data will be used for training that are of cases that are NOT in the topical bucket
                     X.append([smpl.gestalt,smpl.feature,smpl.cadd_phred,smpl.phenomizer,smpl.boqa]) #feature vector
                     y.append(smpl.pathogenicity) #class labels
-            
+
             X=np.array(X) #the clf function needs np arrays
             scaler = preprocessing.MinMaxScaler().fit(X)
             X=scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
             y=np.array(y)#the clf function needs np arrays
-        
+
             clf = MLPClassifier(hidden_layer_sizes=(4,3), max_iter=10, alpha=1e-4,
                     solver='sgd', verbose=10, tol=1e-4, random_state=1,
                     learning_rate_init=.1)
-            clf.fit(X,y) 
-        
+            clf.fit(X,y)
+
             for smpl in self.samples:
                 if smpl.case in bucket: #only those samples are tested with the classifier that ARE in the bucket
                     smpl.pedia = float(clf.predict(scaler.transform(np.array([smpl.gestalt, smpl.feature , smpl.cadd_phred, smpl.phenomizer, smpl.boqa]))))
             bn+=1
-            
-            
-    def classify_real(self,training_data): 
-        """ SVM classification of all samples in the instance of Data against  a given training data set that is also an instance of class Data """
+
+
+    def classify_real(self, training_data):
+        """ SVM classification of all samples in the instance of Data against a given training data set that is also an instance of class Data """
         print('classification')
-        X=[]
-        y=[]
+        X = []
+        y = []
         for smpl in training_data.samples:
-            X.append([smpl.gestalt,smpl.feature,smpl.cadd_phred,smpl.phenomizer,smpl.boqa]) #feature vector
+            X.append([smpl.gestalt,smpl.feature, smpl.cadd_phred, smpl.phenomizer, smpl.boqa]) #feature vector
             y.append(smpl.pathogenicity) #class labels
-        
-        X=np.array(X) #the clf function needs np arrays
+
+        X = np.array(X) #the clf function needs np arrays
         scaler = preprocessing.MinMaxScaler().fit(X)
-        X=scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
-        y=np.array(y)#the clf function needs np arrays   
-        clf = svm.SVC(kernel = 'poly', C=1, degree=2, probability=False, class_weight='balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
-        clf.fit(X,y) 
+        X = scaler.transform(X) #data is scaled to values between 1 and 0 using minmax scaler
+        y = np.array(y)#the clf function needs np arrays
+        clf = svm.SVC(kernel = 'poly', C = 1, degree = 2, probability = False, class_weight = 'balanced') #the classifier is balanced because class 0 exceeds class 1 by far, (only one pathogenic mutation per case,but several hundred genes per case)
+        clf.fit(X, y)
         for smpl in self.samples:
                 smpl.pedia = float(clf.decision_function(scaler.transform(np.array([smpl.gestalt, smpl.feature, smpl.cadd_phred, smpl.phenomizer, smpl.boqa]))))
 
-            
-    def manhattan(self, ID='all',score='pedia'):
+
+    def manhattan(self, ID = 'all',score = 'pedia'):
         """ Displays the information in Data as a manhattan plot. If the optional variable ID is set to a string matching a case ID, only the results of this case will be displayed."""
         genepos={}
         chr_sizes=[249250621, 243199373, 198022430, 191154276, 180915260, 171115067, 159138663, 146364022, 141213431, 135534747, 135006516, 133851895, 115169878, 107349540, 102531392, 90354753, 81195210, 78077248, 59128983, 63025520, 48129895, 51304566, 155270560, 59373566, 16571]
         for line in open('allgenepositions.txt'):
-            fields=line[:-1].split('\t')
-            nm=fields[0]
-            chro=fields[1]
-            pos=fields[2]
-            name=fields[3]
+            fields = line[:-1].split('\t')
+            nm = fields[0]
+            chro = fields[1]
+            pos = fields[2]
+            name = fields[3]
             if name not in genepos:
                 genepos[name]=[chro,pos]
         sanos=[]
@@ -533,7 +531,7 @@ class Data:
                         else:
                             sanos.append(getattr(smpl, score))
                             s_pos.append(pos)
-                            
+
                     if smpl.pathogenicity==1:
                         pathos.append(getattr(smpl, score))
                         p_pos.append(pos)
@@ -570,7 +568,7 @@ class Data:
                 chr_names.append('Y')
             elif i==25:
                 chr_names.append('M')
-            else:  
+            else:
                 chr_names.append(str(i))
         frame1.axes.xaxis.set_ticklabels(chr_names, fontsize=25)
         frame1.axes.tick_params(axis='x',length=0)
@@ -579,8 +577,8 @@ class Data:
         y_max=max([max(sanos),max(sanos2),max(pathos)])
         plt.ylim(y_min, y_max+(y_max/10)) #ymin-(ymax/30)
         plt.xlim(0,ticks[-1]+(chr_sizes[-1]/2)+10**6)
-        
-    def ranker(self,col,lab):  
+
+    def ranker(self,col,lab):
         """A function to evaluate (rank) the results of the classification and put into a plot. only to be used after data was classified."""
         #data is what is to be analyzed, it must have the structure of alldatascored in classify()
         #col is the color of the plot
@@ -610,9 +608,9 @@ class Data:
                 combined_rank.append([case, rank]) #assignes the rank of the pathogenic gene to the case
                 pathoamongdata=True #true because there was a pathogenic gene in that case
                 npf+=1
-                
+
             rank+=1 #increased by 1 for each iteration, because the list is sorted by case and than pedia score
-        
+
         combined_performance=[]
         for i in range(101): #will evalute ranks in range 0 to 101)
             sens=0
@@ -631,8 +629,8 @@ class Data:
         plt.ylabel('Sensitivity')
         plt.title('Sensitivity-rank-cut-off-correlation')
         plt.legend(loc='lower right')
-        
-    def ranker2(self,col,lab, score='pedia'):  
+
+    def ranker2(self,col,lab, score='pedia'):
         """A function to evaluate (rank) the results of the classification and put into a plot. only to be used after data was classified."""
         #data is what is to be analyzed, it must have the structure of alldatascored in classify()
         #col is the color of the plot
@@ -675,8 +673,8 @@ class Data:
         plt.ylabel('Sensitivity')
         plt.title('Sensitivity-rank-cut-off-correlation')
         plt.legend(loc='lower right')
-        
-    def ranker_returner(self,lab, score='pedia'):  
+
+    def ranker_returner(self,lab, score='pedia'):
         """A function to evaluate (rank) the results of the classification and put into a plot. only to be used after data was classified."""
         #data is what is to be analyzed, it must have the structure of alldatascored in classify()
         #col is the color of the plot
@@ -720,8 +718,8 @@ class Data:
 #        plt.title('Sensitivity-rank-cut-off-correlation')
 #        plt.legend(loc='lower right')
         return([combined_performance[1],combined_performance[10],combined_performance[100]])
-        
-    def ranker_returner2(self,lab, score='pedia'):  
+
+    def ranker_returner2(self,lab, score='pedia'):
         """A function to evaluate (rank) the results of the classification and put into a plot. only to be used after data was classified."""
         #data is what is to be analyzed, it must have the structure of alldatascored in classify()
         #col is the color of the plot
@@ -767,7 +765,7 @@ class Data:
 #        plt.legend(loc='lower right')
         print([combined_performance[1],combined_performance[10],combined_performance[100]])
 
-        
+
     def compare(self, score1='pedia', score2='gestalt', score3='extom'):
         cases={}
         rank1=1000
@@ -817,8 +815,8 @@ class Data:
         for case in ranking:
             if ranking[case][0]<ranking[case][2]:
                 print(str(case),ranking[case])
-            
-    def ranker3(self,col,lab, score='pedia'):  
+
+    def ranker3(self,col,lab, score='pedia'):
         """A function to evaluate (rank) the results of the classification and put into a plot. only to be used after data was classified."""
         #data is what is to be analyzed, it must have the structure of alldatascored in classify()
         #col is the color of the plot
@@ -827,9 +825,9 @@ class Data:
         genes={}
         cdg={}
         for entry in self.casedisgene:
-            genes[entry[1]]=[] 
+            genes[entry[1]]=[]
             cdg[entry[0]]=entry[1]
-        
+
         cases={}
         combined_rank=[] #a list that will contain lists of the IDs of each case and the rank of the respective pathogenic variant, ranked by the pedia-score
         n_cases = len(self.casedisgene)
@@ -878,12 +876,12 @@ class Data:
         plt.title('Sensitivity-rank-cut-off-correlation')
         plt.legend(loc='lower right')
 
-                    
-        
-            
-            
-    
-    def save_jsons(self,path): 
+
+
+
+
+
+    def save_jsons(self,path):
         '''a function to save the pedia scores in their respective jsons'''
         cwd=os.getcwd()
         os.chdir(path)
@@ -901,9 +899,9 @@ class Data:
                      json.dump(casedata, f)
         os.chdir(cwd)
         print('finished saving')
-        
+
     def hyper_search_helper(self, start=-5, stop=5, step=10, maximum=0, attempts=2, best=[0,[0,0,0]]):
-        for i in range(0,step+1,1):      
+        for i in range(0,step+1,1):
             exp=start+(i/step*(stop-start))
             print('evaluating c-value of 10**'+str(exp)+'\nstep '+str(i+1)+' of '+str(step))
             c_value=10**exp
@@ -915,7 +913,7 @@ class Data:
                 if performance[1][0]>best[1][0]:
                     best=performance
                 elif performance[1][0]==best[1][0] and performance[1][2]>best[1][2]:
-                    best=performance     
+                    best=performance
             #results.append(performance)
             print('best',best)
         #print(results)
@@ -926,7 +924,7 @@ class Data:
         else:
             result=[start-((stop-start)),stop+((stop-start)),step, attempts, best]
         return(result)
-        
+
     def hyper_search(self, start=-5, stop=5, step=10, maximum=0, attempts=2, best=[0,[0,0,0]]):
         iteration=1
         while attempts>0:
@@ -940,165 +938,152 @@ class Data:
             best=new[4]
             iteration+=1
         print('hyperparameter search determined best c-value at '+str(best))
-            
-            
-            
-
-    
-
-        
-  
 
 
+def main():
+    path = "/data/8/projects/PEDIA/simulation/json_simulation/"
+    print('loading 1KG')
+    onekg = Data()
+    onekg.load(path + 'real/train/1KG')
+    onekg.numhit(0)
+    print('loading ExAC')
+    exac = Data()
+    exac.load(path + 'real/train/ExAC')
+    exac.numhit(0)
+    print('loading Iranian')
+    iran = Data()
+    iran.load(path + 'real/train/IRAN')
+    iran.numhit(0)
+    print('loading test data')
+    test = Data()
+    test.load(path + 'real/test')
+    test.numhit(0)
+    print('classifying against 1KG')
+    test.classify_real(onekg)
+    test.ranker('red','1KG')
+    print('classifying against ExAC')
+    test.classify_real(exac)
+    test.ranker('blue', 'EXAC')
+    print('classifying against Iranian')
+    test.classify_real(iran)
+    test.ranker('purple', 'Iran')
+    plt.show()
 
-          
-#print('loading 1KG')
-#onekg = Data()
-#onekg.load('real/train/1KG')
-#onekg.numhit(0)
-#print('loading ExAC')
-#exac = Data()
-#exac.load('real/train/ExAC')
-#exac.numhit(0)
-#print('loading Iranian')
-#iran = Data()
-#iran.load('real/train/IRAN')
-#iran.numhit(0)
-#print('loading test data')
-#test = Data()
-#test.load('real/test')
-#test.numhit(0)
-#print('classifying against 1KG')
-#test.classify_real(onekg)
-#test.ranker('red','1KG')
-#print('classifying against ExAC')
-#test.classify_real(exac)
-#test.ranker('blue','EXAC')
-#print('classifying against Iranian')
-#test.classify_real(iran)
-#test.ranker('purple','Iran')
-#plt.show()
+    results = []
+    best=[None, [0, 0, 0]]
+    print('loading 1KG')
+    onekg = Data()
+    onekg.load(path + '1KG/CV')
+    onekg.save_SVM(C = 10 ** (-1.45))
+    onekg.hyper_search(start = -3, stop = 3)
 
+    smpl = Sample()
+    smpl.boqa = 0.5
+    smpl.phenomizer = 0.7
+    smpl.cadd_phred = 17
+    smpl.feature = 0
+    smpl.gestalt = 1.5
 
-#results=[]
-#best=[None,[0,0,0]]
-#print('loading 1KG')
-#onekg = Data()
-#onekg.load('1KG/CV')
-#onekg.save_SVM(C=10**(-1.45))
-#onekg.hyper_search(start=-3, stop=3)
-
-#smpl = Sample()
-#smpl.boqa=0.5
-#smpl.phenomizer=0.7
-#smpl.cadd_phred=17
-#smpl.feature=0
-#smpl.gestalt=1.5
-#
-#smpl.classify()
+    smpl.classify()
 
 
 
-
-        
-    
-
-#print('classifying 1KG by SVM')
-#onekg.classify_10xSVM()
-#onekg.manhattan('40639')
-#plt.show()
+    print('classifying 1KG by SVM')
+    onekg.classify_10xSVM()
+    onekg.manhattan('40639')
+    plt.show()
 
 
-#onekg.ranker2('red','PEDIA')
-#onekg.classify_10xSVM_extom()
-#onekg.ranker2('blue','extom',score='extom')
-#onekg.compare()
+    onekg.ranker2('red', 'PEDIA')
+    onekg.classify_10xSVM_extom()
+    onekg.ranker2('blue', 'extom', score = 'extom')
+    onekg.compare()
 
 
-#onekg.classify_10xSVM_extom()
-#onekg.ranker2('blue','extom no filter', score='extom')
-#onekg.ranker2('green', 'gestalt no filter', score='gestalt')
-#onekg2 = Data()
-#onekg2.load2('1KG/CV')
-#print('classifying 1KG by SVM')
-#onekg2.classify_10xSVM()
-#onekg2.ranker2('black','extom  sep. loaded')
-#plt.show()
+    onekg.classify_10xSVM_extom()
+    onekg.ranker2('blue', 'extom no filter', score = 'extom')
+    onekg.ranker2('green', 'gestalt no filter', score = 'gestalt')
+    onekg2 = Data()
+    onekg2.load2(path + '1KG/CV')
+    print('classifying 1KG by SVM')
+    onekg2.classify_10xSVM()
+    onekg2.ranker2('black', 'extom  sep. loaded')
+    plt.show()
 
-##onekg.ranker2('purple','gestalt',score='gestalt')
-##onekg.ranker2('orange','cadd_phred',score='cadd_phred')
-#onekg.filter_gestalt()
-#onekg.classify_10xSVM_extom()
-#onekg.ranker3('blue','extom post filter', score='extom')
+    #onekg.ranker2('purple','gestalt',score='gestalt')
+    #onekg.ranker2('orange','cadd_phred',score='cadd_phred')
+    onekg.filter_gestalt()
+    onekg.classify_10xSVM_extom()
+    onekg.ranker3('blue', 'extom post filter', score = 'extom')
 
 
 
-#onekg = Data()
-#onekg.load('real/train/1KG')
-#test = Data()
-#test.load('real/test')
-#test.classify_real(onekg)
-#test.ranker2('red','PEDIA')
-#onekg.filter_gestalt()
-#test.classify_real(onekg)
-#test.ranker2('blue','extom')
-#plt.show()
+    onekg = Data()
+    onekg.load('real/train/1KG')
+    test = Data()
+    test.load(path + 'real/test')
+    test.classify_real(onekg)
+    test.ranker2('red', 'PEDIA')
+    onekg.filter_gestalt()
+    test.classify_real(onekg)
+    test.ranker2('blue', 'extom')
+    plt.show()
 
 
 
-#onekgnum = Data()
-#onekgnum.load('1KG/CV')
-#onekgnum.numhit(2)
-#print('classifying 1KGnum by SVM')
-#onekgnum.classify_10xSVM()
-#onekgnum.ranker3('green','PEDIA num')
-#onekgnum.filter_gestalt()
-#onekgnum.classify_10xSVM_extom()
-#onekgnum.ranker3('orange','extomnum', score='extom')
+    onekgnum = Data()
+    onekgnum.load(path + '1KG/CV')
+    onekgnum.numhit(2)
+    print('classifying 1KGnum by SVM')
+    onekgnum.classify_10xSVM()
+    onekgnum.ranker3('green', 'PEDIA num')
+    onekgnum.filter_gestalt()
+    onekgnum.classify_10xSVM_extom()
+    onekgnum.ranker3('orange', 'extomnum', score = 'extom')
 
 
-#onekg.compare()
-#plt.show()
+    onekg.compare()
+    plt.show()
 
-#scores=[[30,0],[7,0],[346,0],[9,0],[65,0],[39,0],[87,0],[124,0],[39,1],[30,0],[-1,0]]
-#scores.sort()
-#scores.reverse()
-#
-#print(list(enumerate(scores)))
+    scores=[[30, 0], [7, 0], [346, 0], [9, 0], [65, 0], [39, 0], [87, 0], [124, 0], [39, 1], [30, 0], [-1, 0]]
+    scores.sort()
+    scores.reverse()
+
+    print(list(enumerate(scores)))
 
 
-#print('loading 1KG')
-#onekg = Data()
-#onekg.load('1KG/CV')
-#onekg.numhit(0)
-#print('loading ExAC')
-#exac = Data()
-#exac.load('ExAC/CV')
-#exac.numhit(0)
-#print('loading Iranian')
-#iran = Data()
-#iran.load('IRAN/CV')
-#iran.numhit(0)
-#print('classifying 1KG')
-#onekg.classify_10xSVM()
-#onekg.ranker('red','1KG')
-#print('classifying ExAC')
-#exac.classify_10xSVM()
-#exac.ranker('blue','EXAC')
-#print('classifying Iranian')
-#iran.classify_10xSVM()
-#iran.ranker('purple','Iran')
-#plt.show()
+    print('loading 1KG')
+    onekg = Data()
+    onekg.load(path + '1KG/CV')
+    onekg.numhit(0)
+    print('loading ExAC')
+    exac = Data()
+    exac.load(path + 'ExAC/CV')
+    exac.numhit(0)
+    print('loading Iranian')
+    iran = Data()
+    iran.load(path + 'IRAN/CV')
+    iran.numhit(0)
+    print('classifying 1KG')
+    onekg.classify_10xSVM()
+    onekg.ranker('red','1KG')
+    print('classifying ExAC')
+    exac.classify_10xSVM()
+    exac.ranker('blue','EXAC')
+    print('classifying Iranian')
+    iran.classify_10xSVM()
+    iran.ranker('purple','Iran')
+    plt.show()
 
 
 
 
 
-#test=Data()
-#test.load('1KG/CV')
-#test.classify_10xSVM()
-#test.manhattan('97147')
-#plt.show()
+    test=Data()
+    test.load(path + '1KG/CV')
+    test.classify_10xSVM()
+    test.manhattan('97147')
+    plt.show()
 
 
 
@@ -1106,39 +1091,47 @@ class Data:
 
 
 
-#os.chdir('1KG/CV')
-#for i in os.listdir():
-#    with open(i) as json_data:
-#        data = json.load(json_data)
-#        print(data['ranks']['combined_rank'], i[:-5])
+    os.chdir('1KG/CV')
+    for i in os.listdir():
+        with open(i) as json_data:
+            data = json.load(json_data)
+            print(data['ranks']['combined_rank'], i[:-5])
 
 
-            
-            
-
-#test=Data()
-#test.load('real/test')
-#
-#cases=[]
-#patho=0
-#for smpl in test.samples:
-#    if smpl.case not in cases: 
-#        cases.append(smpl.case)
-#for smpl in test.samples:
-#    if smpl.pathogenicity == 1:
-#        cases.pop(cases.index(smpl.case))
 
 
-            
-            
-#os.chdir('real/test')       
-#for case in cases:
-#    with open(str(case)+'.json') as json_data:
-#        data = json.load(json_data)
-#        disgene=data['genomicData'][0]['Test Information']['Gene Name']
-#        print(disgene)
-#        for entry in data['geneList']:
-#            #print(entry['gene_symbol'])
-#            if entry['gene_symbol']==disgene:
-#                print('here')
+
+    test=Data()
+    test.load(path + 'real/test')
+
+    cases=[]
+    patho=0
+    for smpl in test.samples:
+        if smpl.case not in cases:
+            cases.append(smpl.case)
+    for smpl in test.samples:
+        if smpl.pathogenicity == 1:
+            cases.pop(cases.index(smpl.case))
+
+
+
+
+    os.chdir('real/test')
+    for case in cases:
+        with open(str(case)+'.json') as json_data:
+            data = json.load(json_data)
+            disgene=data['genomicData'][0]['Test Information']['Gene Name']
+            print(disgene)
+            for entry in data['geneList']:
+                #print(entry['gene_symbol'])
+                if entry['gene_symbol']==disgene:
+                    print('here')
+
+if __name__ == '__main__':
+    main()
+
+
+
+
+
 
