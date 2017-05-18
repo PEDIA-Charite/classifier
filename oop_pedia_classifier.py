@@ -8,6 +8,7 @@ Created on Mon Feb 20 09:56:23 2017
 import json, os
 import warnings
 import numpy as np
+import sys
 from matplotlib import pyplot as plt
 from sklearn import svm
 from sklearn import preprocessing
@@ -997,22 +998,26 @@ class Data:
 
 
 def main():
-    path = "/data/8/projects/PEDIA/simulation/json_simulation/"
+    if len(sys.argv) < 2:
+        sys.exit('Usage: python %s path(simulation data)' % sys.argv[0])
+
+    path = sys.argv[1]
+
     print('loading 1KG')
     onekg = Data()
-    onekg.load(path + 'real/train/1KG')
+    onekg.load(path + '/real/train/1KG')
     onekg.numhit(0)
     print('loading ExAC')
     exac = Data()
-    exac.load(path + 'real/train/ExAC')
+    exac.load(path + '/real/train/ExAC')
     exac.numhit(0)
     print('loading Iranian')
     iran = Data()
-    iran.load(path + 'real/train/IRAN')
+    iran.load(path + '/real/train/IRAN')
     iran.numhit(0)
     print('loading test data')
     test = Data()
-    test.load(path + 'real/test')
+    test.load(path + '/real/test')
     test.numhit(0)
 
 
@@ -1032,7 +1037,7 @@ def main():
     best = [None, [0, 0, 0]]
     print('loading 1KG')
     onekg = Data()
-    onekg.load(path + '1KG/CV')
+    onekg.load(path + '/1KG/CV')
     onekg.save_SVM(C=10 ** (-1.45))
     onekg.hyper_search(start=-3, stop=3)
 
@@ -1063,7 +1068,7 @@ def main():
     onekg.ranker2('blue', 'extom no filter', score = 'extom')
     onekg.ranker2('green', 'gestalt no filter', score = 'gestalt')
     onekg2 = Data()
-    onekg2.load2(path + '1KG/CV')
+    onekg2.load2(path + '/1KG/CV')
     print('classifying 1KG by SVM')
     onekg2.classify_10xSVM()
     onekg2.ranker2('black', 'extom  sep. loaded')
@@ -1076,11 +1081,10 @@ def main():
     onekg.ranker3('blue', 'extom post filter', score = 'extom')
 
 
-
     onekg = Data()
-    onekg.load('real/train/1KG')
+    onekg.load(path + '/real/train/1KG')
     test = Data()
-    test.load(path + 'real/test')
+    test.load(path + '/real/test')
     test.classify_real(onekg)
     test.ranker2('red', 'PEDIA')
     onekg.filter_gestalt()
@@ -1089,9 +1093,8 @@ def main():
     plt.show()
 
 
-
     onekgnum = Data()
-    onekgnum.load(path + '1KG/CV')
+    onekgnum.load(path + '/1KG/CV')
     onekgnum.numhit(2)
     print('classifying 1KGnum by SVM')
     onekgnum.classify_10xSVM()
@@ -1113,15 +1116,15 @@ def main():
 
     print('loading 1KG')
     onekg = Data()
-    onekg.load(path + '1KG/CV')
+    onekg.load(path + '/1KG/CV')
     onekg.numhit(0)
     print('loading ExAC')
     exac = Data()
-    exac.load(path + 'ExAC/CV')
+    exac.load(path + '/ExAC/CV')
     exac.numhit(0)
     print('loading Iranian')
     iran = Data()
-    iran.load(path + 'IRAN/CV')
+    iran.load(path + '/IRAN/CV')
     iran.numhit(0)
     print('classifying 1KG')
     onekg.classify_10xSVM()
@@ -1135,33 +1138,20 @@ def main():
     plt.show()
 
 
-
-
-
     test=Data()
-    test.load(path + '1KG/CV')
+    test.load(path + '/1KG/CV')
     test.classify_10xSVM()
     test.manhattan('97147')
     plt.show()
 
-
-
-
-
-
-
-    os.chdir('1KG/CV')
+    os.chdir(path + '/1KG/CV')
     for i in os.listdir():
         with open(i) as json_data:
             data = json.load(json_data)
             print(data['ranks']['combined_rank'], i[:-5])
 
-
-
-
-
     test=Data()
-    test.load(path + 'real/test')
+    test.load(path + '/real/test')
 
     cases=[]
     patho=0
@@ -1173,9 +1163,7 @@ def main():
             cases.pop(cases.index(smpl.case))
 
 
-
-
-    os.chdir('real/test')
+    os.chdir(path + '/real/test')
     for case in cases:
         with open(str(case)+'.json') as json_data:
             data = json.load(json_data)
