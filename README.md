@@ -12,4 +12,4 @@ For exampl, the path is /data/8/projects/PEDIA/3_simulation/json_simulation/real
 * output_path is the output folder. The default is current folder.
 
 Therefore, if you run on solexa server, the command is
-```python oop_pedia_classifier.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ /data/8/projects/PEDIA/3_simulation/json_simulation/real/test 1KG 1KG```
+```python oop_pedia_classifier.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ /data/8/projects/PEDIA/3_simulation/json_simulation/real/test 1KG -o 1KG```
