@@ -187,7 +187,7 @@ def rank(pedia, col, lab, path, score='pedia'):
 
 
     plt.figure(figsize=(18, 12))
-    plt.plot(range(1, len(combined_performance)), combined_performance[1:], color=col, alpha=0.6, label=lab, linewidth=3)
+    plt.plot(range(1, len(combined_performance)), combined_performance[0:], color=col, alpha=0.6, label=lab, linewidth=3)
     plt.scatter([1, 10, 100], [combined_performance[0], combined_performance[9], combined_performance[99]], color=col, alpha=0.6, marker='o', s=50)
     print(lab, [combined_performance[0], combined_performance[9], combined_performance[99]])
     #print(lab,[combined_performance[1],combined_performance[10],combined_performance[100]],'fraction passed filter:',(npf/n_cases))
