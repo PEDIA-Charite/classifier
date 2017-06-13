@@ -24,7 +24,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 logging.basicConfig(filename='run.log', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def classify(train_data, test_data, path):
+def classify(train_data, test_data, path, filter_feature=None):
     """ SVM classification of all samples in the instance of Data against a given training
     data set that is also an instance of class Data """
 
@@ -32,15 +32,20 @@ def classify(train_data, test_data, path):
 
     X = []
     y = []
+
     for case in train_data.data:
-        [X.append(value) for value in train_data.data[case][0]]
+        if filter_feature == None:
+            [X.append(value) for value in train_data.data[case][0]]
+        else:
+            for value in train_data.data[case][0]:
+                X.append(value[~np.in1d(range(len(value)), filter_feature)])
+
         [y.append(value) for value in train_data.data[case][1]]
 
     print("Prepare classification complete")
     X = np.array(X)
     X = X.astype(float)
-    #print(X)
-    #normalizer = preprocessing.Normalizer().fit(X)
+    # normalizer = preprocessing.Normalizer().fit(X)
     # data is scaled to values between 1 and 0 using minmax scaler
     normalizer = preprocessing.MinMaxScaler().fit(X)
     X = normalizer.transform(X)
@@ -49,18 +54,23 @@ def classify(train_data, test_data, path):
     print("start train")
     # the classifier is balanced because class 0 exceeds class 1 by far,
     # (only one pathogenic mutation per case,but several hundred genes per case)
-    #clf = ensemble.RandomForestClassifier(n_estimators = 100,max_features=3,n_jobs=2)
     clf = svm.SVC(kernel='poly', C=1, degree=2, probability=False, class_weight='balanced')
     clf.fit(X, y)
 
     print("Start to test")
     pedia = {}
     for case in test_data.data:
+        test_X = []
         score = []
-        test_X = test_data.data[case][0]
+        if filter_feature == None:
+            test_X = test_data.data[case][0]
+        else:
+            for value in test_data.data[case][0]:
+                test_X.append(value[~np.in1d(range(len(value)), filter_feature)])
+
+        test_X = np.array(test_X)
         test_X = test_X.astype(float)
         score = clf.decision_function(normalizer.transform(test_X))
-        #prob = clf.predict_proba(normalizer.transform(test_X))[:, 1]
 
         score = np.array(score)
         pathogenicity = np.array(test_data.data[case][1])

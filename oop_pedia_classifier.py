@@ -15,6 +15,14 @@ from data import Data
 from classifier import *
 from draw import *
 
+
+FM_IDX = 0
+CADD_IDX = 1
+GESTALT_IDX = 2
+BOQA_IDX = 3
+PHENO_IDX = 4
+
+
 def main():
 
     # Parse input arguments
@@ -46,8 +54,8 @@ def main():
     # Load training data and testing data
     train_data = Data()
     test_data = Data()
-    train_data.loadData(train_file)
-    test_data.loadData(test_file)
+    train_data.loadData(train_file, 'gestalt_score')
+    test_data.loadData(test_file, 'gestalt_score')
 
     # Get min value of each feature then apply to missing value
     features_min = train_data.getFeatureMin()
@@ -56,7 +64,11 @@ def main():
 
     # Train classifier by training set and test on testing set
     # Return pedia which contain pedia score, label and gene id
-    pedia = classify(train_data, test_data, output_path)
+    # We can add filter_feature to remove the feature we don't want
+    # to be trained by the classifier. For example
+    # filter_feature = [FM_IDX, GESTALT_IDX]
+    filter_feature = None
+    pedia = classify(train_data, test_data, output_path, filter_feature)
 
     # draw manhattan plot
     for case in pedia:

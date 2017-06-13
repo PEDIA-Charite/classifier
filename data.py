@@ -26,12 +26,13 @@ class Data:
 
 
     def __init__(self, samples=[], casedisgene=[]):
-        #self.name = name
         self.data = {}
 
         self.casedisgene = casedisgene
 
-    def loadData(self, input_file):
+    def loadData(self, input_file, filter_field=None):
+
+        filter_cases = []
 
         with open(input_file) as csvfile:
             reader = csv.DictReader(csvfile)
@@ -44,20 +45,31 @@ class Data:
                 y = self.data[case][1]
                 gene = self.data[case][2]
 
-                x.append([row["feature_score"], row["cadd_phred_score"], row["combined_score"], row["cadd_raw_score"], row["gestalt_score"], row["boqa_score"], row["pheno_score"]])
+                x.append([row["feature_score"], row["cadd_phred_score"], row["gestalt_score"], row["boqa_score"], row["pheno_score"]])
                 y.append(int(row["label"]))
                 gene.append(row["gene_symbol"])
 
-            for key in self.data:
+                # filter the sample which has no the feature we assigned
+                if filter_field != None:
+                    if int(row["label"]) == 1:
+                        if row[filter_field] == 'nan':
+                            logger.info("%s - %s has no %s score", case, row["gene_symbol"], filter_field)
+                            filter_cases.append(case)
 
-                x = self.data[key][0]
-                y = self.data[key][1]
+            for key in list(self.data):
+                if key in filter_cases:
+                    del self.data[key]
+                else:
+                    x = self.data[key][0]
+                    y = self.data[key][1]
 
-                x = np.array(x)
-                y = np.array(y)
+                    x = np.array(x)
+                    y = np.array(y)
 
-                self.data[key][0] = x
-                self.data[key][1] = y
+                    self.data[key][0] = x
+                    self.data[key][1] = y
+
+            logger.info("Input %s: total %d cases", input_file, len(self.data))
 
     def getFeatureMin(self):
         features_min = []
@@ -75,3 +87,5 @@ class Data:
             for case in self.data:
                 data = self.data[case][0]
                 data[data[:, index] == 'nan', index] = features_min[index]
+
+
