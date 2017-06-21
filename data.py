@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
 import json, os
 import warnings
 import numpy as np
 import sys
 import logging
 import csv
-from matplotlib import pyplot as plt
 from sklearn import svm
 from sklearn import preprocessing
 from sklearn.neural_network import MLPClassifier
@@ -24,6 +24,20 @@ class Data:
         casedisgene: a list of lists [[case,gene]] containing each case in samples and the respective disease causing gene
     """
 
+    # index for each score
+    FM_IDX = 0
+    CADD_IDX = 1
+    GESTALT_IDX = 2
+    BOQA_IDX = 3
+    PHENO_IDX = 4
+
+
+    # FEATURE_IDX is for feature vector which contain the above feature score
+    # LABEL_IDX is for pathogenic gene label (0, 1)
+    # GENE_IDX is for gene symbol
+    FEATURE_IDX = 0
+    LABEL_IDX = 1
+    GENE_IDX = 2
 
     def __init__(self, samples=[], casedisgene=[]):
         self.data = {}
@@ -31,7 +45,6 @@ class Data:
         self.casedisgene = casedisgene
 
     def loadData(self, input_file, filter_field=None):
-
         filter_cases = []
 
         with open(input_file) as csvfile:
@@ -41,9 +54,9 @@ class Data:
                 case = row["case"]
                 if not case in self.data:
                     self.data.update({case:[[], [], []]})
-                x = self.data[case][0]
-                y = self.data[case][1]
-                gene = self.data[case][2]
+                x = self.data[case][self.FEATURE_IDX]
+                y = self.data[case][self.LABEL_IDX]
+                gene = self.data[case][self.GENE_IDX]
 
                 x.append([row["feature_score"], row["cadd_phred_score"], row["gestalt_score"], row["boqa_score"], row["pheno_score"]])
                 y.append(int(row["label"]))
@@ -60,32 +73,31 @@ class Data:
                 if key in filter_cases:
                     del self.data[key]
                 else:
-                    x = self.data[key][0]
-                    y = self.data[key][1]
+                    x = self.data[key][self.FEATURE_IDX]
+                    y = self.data[key][self.LABEL_IDX]
 
                     x = np.array(x)
                     y = np.array(y)
 
-                    self.data[key][0] = x
-                    self.data[key][1] = y
+                    self.data[key][self.FEATURE_IDX] = x
+                    self.data[key][self.LABEL_IDX] = y
 
             logger.info("Input %s: total %d cases", input_file, len(self.data))
 
-    def getFeatureMin(self):
-        features_min = []
-        feature_dim = next(iter(self.data.values()))[0].shape[1]
+    def getFeatureDefault(self):
+        features_default = []
+        feature_dim = next(iter(self.data.values()))[self.FEATURE_IDX].shape[1]
         for index in range(feature_dim):
-            feature_value = np.concatenate([self.data[case][0][:, index] for case in self.data], axis=0)
+            feature_value = np.concatenate([self.data[case][self.FEATURE_IDX][:, index] for case in self.data], axis=0)
             m = np.nanmin(feature_value.astype(np.float))
-            features_min.append(m)
+            features_default.append(m)
 
-        return features_min
+        return features_default
 
-    def preproc(self, features_min):
-        feature_dim = len(features_min)
+    def preproc(self, features_default):
+        feature_dim = len(features_default)
         for index in range(feature_dim):
             for case in self.data:
-                data = self.data[case][0]
-                data[data[:, index] == 'nan', index] = features_min[index]
-
+                data = self.data[case][self.FEATURE_IDX]
+                data[data[:, index] == 'nan', index] = features_default[index]
 

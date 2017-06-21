@@ -1,22 +1,19 @@
+# -*- coding: utf-8 -*-
 import json, os
 import warnings
 import numpy as np
-import sys
 import logging
 import csv
 from sklearn import preprocessing
-#from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import LeaveOneGroupOut
 from sklearn.externals import joblib
 from sample import Sample
+from data import Data
 import getopt
-from sklearn.preprocessing import Imputer
-from sklearn import preprocessing
-from sklearn.model_selection import LeaveOneGroupOut
 from sklearn import svm, datasets, ensemble
 from scipy import interp
-import matplotlib.pyplot as plt
 from itertools import cycle
-from sklearn.metrics import roc_curve, auc, precision_recall_curve
+from sklearn.model_selection import KFold
 import gzip
 
 
@@ -28,21 +25,19 @@ def classify(train_data, test_data, path, filter_feature=None):
     """ SVM classification of all samples in the instance of Data against a given training
     data set that is also an instance of class Data """
 
-    print('classification')
-
     X = []
     y = []
 
-    for case in train_data.data:
+    for case in train_data:
         if filter_feature == None:
-            [X.append(value) for value in train_data.data[case][0]]
+            [X.append(value) for value in train_data[case][0]]
         else:
-            for value in train_data.data[case][0]:
+            for value in train_data[case][0]:
                 X.append(value[~np.in1d(range(len(value)), filter_feature)])
 
-        [y.append(value) for value in train_data.data[case][1]]
+        [y.append(value) for value in train_data[case][1]]
 
-    print("Prepare classification complete")
+    print("Classification preparation complete")
     X = np.array(X)
     X = X.astype(float)
     # normalizer = preprocessing.Normalizer().fit(X)
@@ -59,13 +54,13 @@ def classify(train_data, test_data, path, filter_feature=None):
 
     print("Start to test")
     pedia = {}
-    for case in test_data.data:
+    for case in test_data:
         test_X = []
         score = []
         if filter_feature == None:
-            test_X = test_data.data[case][0]
+            test_X = test_data[case][0]
         else:
-            for value in test_data.data[case][0]:
+            for value in test_data[case][0]:
                 test_X.append(value[~np.in1d(range(len(value)), filter_feature)])
 
         test_X = np.array(test_X)
@@ -73,8 +68,8 @@ def classify(train_data, test_data, path, filter_feature=None):
         score = clf.decision_function(normalizer.transform(test_X))
 
         score = np.array(score)
-        pathogenicity = np.array(test_data.data[case][1])
-        gene = np.array(test_data.data[case][2])
+        pathogenicity = np.array(test_data[case][1])
+        gene = np.array(test_data[case][2])
         length = len(score)
         sorted_index = score.argsort()[::-1][:length]
         score = score[sorted_index]
@@ -118,7 +113,6 @@ def classify_RF(train_data, test_data, path):
     # the classifier is balanced because class 0 exceeds class 1 by far,
     # (only one pathogenic mutation per case,but several hundred genes per case)
     clf = ensemble.RandomForestClassifier(n_estimators = 100,max_features=3,n_jobs=2)
-    #clf = svm.SVC(kernel='poly', C=1, degree=2, probability=False, class_weight='balanced')
     clf.fit(X, y)
 
     print("Start to test")
@@ -127,7 +121,6 @@ def classify_RF(train_data, test_data, path):
         score = []
         test_X = test_data.data[case][0]
         test_X = test_X.astype(float)
-        #score = clf.decision_function(normalizer.transform(test_X))
         score = clf.predict_proba(normalizer.transform(test_X))[:, 1]
 
         score = np.array(score)
@@ -149,6 +142,53 @@ def classify_RF(train_data, test_data, path):
                 writer.writerow({'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
 
     return pedia
+
+
+def classify_cv(data, path, k_fold, filter_feature=None):
+    kf = KFold(n_splits=k_fold)
+    sample_names = np.array(list(data.keys()))
+
+    fold_count = 1
+    pedia = {}
+    for train_idx, test_idx in kf.split(sample_names):
+        print("Start fold ", fold_count)
+        train_keys = sample_names[train_idx]
+        test_keys = sample_names[test_idx]
+        train = {key:data[key] for key in train_keys}
+        test = {key:data[key] for key in test_keys}
+        pedia.update(classify(train, test, path, filter_feature))
+        fold_count += 1
+
+    return pedia
+
+def classify_loocv(data, path, filter_feature=None):
+    sample_names = np.array(list(data.keys()))
+    genes = []
+    for name in sample_names:
+        gene_idx, = np.where(data[name][Data.LABEL_IDX] == 1)
+        genes.append(np.array(data[name][Data.GENE_IDX])[gene_idx].tolist()[0])
+
+    logo = LeaveOneGroupOut()
+
+    fold_count = 1
+    pedia = {}
+
+    csvfile =  open(path + "/loocv_group.csv", 'w')
+    writer = csv.writer(csvfile)
+    for train_idx, test_idx in logo.split(sample_names, groups=genes):
+        print("Start fold ", fold_count)
+        train_keys = sample_names[train_idx]
+        test_keys = sample_names[test_idx]
+        print(np.array(genes)[test_idx][0])
+        train = {key:data[key] for key in train_keys}
+
+        test = {key:data[key] for key in test_keys}
+        pedia.update(classify(train, test, path, filter_feature))
+        fold_count += 1
+
+        writer.writerow([np.array(genes)[test_idx][0], test_keys.tolist()])
+    return pedia
+
 #def manhattan(self, ID='all', score='pedia'):
 #    """ Displays the information in Data as a manhattan plot. If the optional variable ID is set to a string matching a case ID, only the results of this case will be displayed."""
 #    genepos={}

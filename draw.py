@@ -1,10 +1,13 @@
+# -*- coding: utf-8 -*-
 import json, os
 import warnings
 import numpy as np
 import sys
 import logging
 import csv
-from matplotlib import pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 logging.basicConfig(filename='run.log', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -134,6 +137,7 @@ def manhattan(pedia, path, ID='all'):
             plt.title(ID)
             filename = path + "/manhattan_" + ID + ".png"
             plt.savefig(filename)
+            plt.close()
 
 
 
@@ -156,22 +160,32 @@ def rank(pedia, col, lab, path, score='pedia'):
     # will evalute ranks in range 0 to 101)
     counts = []
     filename = path + '/rank_gene_' + lab + ".csv"
+    total = len(pedia)
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
-        for i in range(101):
+        cases = []
+        for i in range(99):
             count = 0
             for case in pedia:
                 if pedia[case][1][i] == 1:
                     count += 1
+                    cases.append(case)
                     writer.writerow([case, i])
             counts.append(count)
+        over_100 = {key: pedia[key] for key in pedia if key not in cases}
+        for key in over_100.keys():
+            writer.writerow([key, 99])
+        counts.append(len(over_100))
+
+        print("Total:"+str(len(pedia)))
+        print('Over 100:'+str(len(over_100)))
+
                 # the absolute number is divided by the total number of cases, so that one has the
                 # fraction of cases having a patho rank not higher than i
                 # appends sens to i, so that combined rank is a list of floats, each float describing
                 # the fraction of cases that have a pathorank lower or eqaul to its index
                 #combined_performance.append(sens)
 
-    total = len(pedia)
     tmp = 0
 
     filename = path + '/rank_' + lab + ".csv"
@@ -185,9 +199,8 @@ def rank(pedia, col, lab, path, score='pedia'):
             combined_performance.append(tmp / total)
 
 
-
     plt.figure(figsize=(18, 12))
-    plt.plot(range(1, len(combined_performance)), combined_performance[0:len(combined_performance)-1], color=col, alpha=0.6, label=lab, linewidth=3)
+    plt.plot(range(1, len(combined_performance)+1), combined_performance[0:len(combined_performance)], color=col, alpha=0.6, label=lab, linewidth=3)
     plt.scatter([1, 10, 100], [combined_performance[0], combined_performance[9], combined_performance[99]], color=col, alpha=0.6, marker='o', s=50)
     print(lab, [combined_performance[0], combined_performance[9], combined_performance[99]])
     #print(lab,[combined_performance[1],combined_performance[10],combined_performance[100]],'fraction passed filter:',(npf/n_cases))
@@ -201,4 +214,5 @@ def rank(pedia, col, lab, path, score='pedia'):
     plt.legend(loc='lower right', fontsize=30)
     filename = path + "/rank_" + lab + ".png"
     plt.savefig(filename)
+    plt.close()
 
