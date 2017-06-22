@@ -8,6 +8,9 @@ FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1
 
 data = expand("CV_{data}/run.log", data=DATA_TYPE),
 
+
+classify_file = 'scripts/oop_pedia_classifier.py'
+
 rule all:
     input:
         expand("output/CV_{data}/run.log", data=DATA_TYPE),
@@ -22,13 +25,13 @@ rule CV:
         label = "{data}",
         dir = "output/CV_{data}"
     shell:
-        "python oop_pedia_classifier.py '{input.train}' '{params.label}' -c 10 -o '{params.dir}'"
+        "python {classify_file} '{input.train}' '{params.label}' -c 10 -o '{params.dir}'"
 
 rule CV_all:
     input:
         expand("output/CV_{data}/run.log", data=DATA_TYPE)
     output:
-        touch("CV_all.log")
+        touch("output/CV_all.log")
 
 rule CV_filter:
     input:
@@ -41,14 +44,14 @@ rule CV_filter:
         exclude_feature = "{exclude}"
     shell:
         """
-        python oop_pedia_classifier.py {input.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir}
+        python {classify_file} {input.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir}
         """
 
 rule CV_filter_all:
     input:
         expand("output/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
     output:
-        touch("CV_exclude_all.log")
+        touch("output/CV_exclude_all.log")
 
 rule LOOCV:
     input:
@@ -59,11 +62,11 @@ rule LOOCV:
         label = "{data}",
         dir = "output/LOOCV_{data}"
     shell:
-        "python oop_pedia_classifier.py '{input.train}' '{params.label}' -l -o '{params.dir}'"
+        "python {classify_file} '{input.train}' '{params.label}' -l -o '{params.dir}'"
 
 rule LOOCV_all:
     input:
         expand("output/LOOCV_{data}/run.log", data=DATA_TYPE)
     output:
-        touch("LOOCV_all.log")
+        touch("output/LOOCV_all.log")
 
