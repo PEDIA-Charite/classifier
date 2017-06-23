@@ -15,6 +15,7 @@ from data import Data
 from classifier import *
 from draw import *
 from time import gmtime, strftime
+from json_to_table import parse_json
 
 def main():
 
@@ -77,12 +78,10 @@ def main():
     fp.close()
 
     # Parse json files from Training folder and Testing folder
-    cmd = "python jsonToTable.py -i " + train_path + " -o " + train_file
-    os.system(cmd)
+    parse_json(train_path, train_file)
 
     if mode == TEST_MODE:
-        cmd = "python jsonToTable.py -i " + test_path + " -o " + test_file
-        os.system(cmd)
+        parse_json(test_path, test_file)
 
     # Load training data and testing data
     train_data = Data()

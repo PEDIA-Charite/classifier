@@ -25,7 +25,9 @@ rule CV:
         label = "{data}",
         dir = "output/CV_{data}"
     shell:
-        "python {classify_file} '{input.train}' '{params.label}' -c 10 -o '{params.dir}'"
+        """
+        python {classify_file} '{input.train}' '{params.label}' -c 10 -o '{params.dir}';
+        """
 
 rule CV_all:
     input:
@@ -44,7 +46,7 @@ rule CV_filter:
         exclude_feature = "{exclude}"
     shell:
         """
-        python {classify_file} {input.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir}
+        python {classify_file} {input.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir};
         """
 
 rule CV_filter_all:
@@ -62,7 +64,9 @@ rule LOOCV:
         label = "{data}",
         dir = "output/LOOCV_{data}"
     shell:
-        "python {classify_file} '{input.train}' '{params.label}' -l -o '{params.dir}'"
+        """
+        python {classify_file} '{input.train}' '{params.label}' -l -o '{params.dir}'";
+        """
 
 rule LOOCV_all:
     input:
@@ -70,3 +74,10 @@ rule LOOCV_all:
     output:
         touch("output/LOOCV_all.log")
 
+rule Report:
+    shell:
+        """
+        cd latex;
+        pdflatex report.tex;
+        cd ..
+        """
