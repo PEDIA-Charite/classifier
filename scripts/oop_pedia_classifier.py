@@ -32,7 +32,7 @@ def main():
     parser.add_argument('-o', '--output', default=".", help='Path of output')
     parser.add_argument('-c', '--cv', type=int, help='Enable k-fold cross validation. Default 10-fold')
     parser.add_argument('-l', '--loocv', action='store_true', help='Enable group leave one out cross validation')
-    parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use ; to separate them.')
+    parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
 
     args = parser.parse_args()
     train_path = args.Train_path
