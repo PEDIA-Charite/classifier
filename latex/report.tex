@@ -1,0 +1,75 @@
+\documentclass[12pt,cspaper]{paper}
+
+\usepackage{url}
+\usepackage{color,rotating,epic,subfigure,amssymb,cite,amscd,amsmath,multirow,bm,url,rotating}
+\usepackage[margin=2cm]{geometry}
+
+\usepackage{graphicx,epstopdf}
+\usepackage{multirow,threeparttable, makecell}
+\usepackage{amssymb, siunitx}
+\usepackage{amsthm}
+\usepackage{epsfig}
+\usepackage{cite}
+\usepackage{verbatim}
+\usepackage{tikz}
+%\usepackage{gantt}
+
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,fit,positioning,shapes.symbols,chains}
+\usetikzlibrary{positioning}
+\usepackage{tikz-qtree}
+\begin{document}
+
+\title{PEDIA}
+
+\maketitle
+
+
+\input{table/acc_cv_result.tex}
+\input{table/acc_loocv_result.tex}
+
+\input{table/gene_cv_result.tex}
+\input{table/gene_loocv_result.tex}
+
+
+\input{table/acc_exclude_result.tex}
+\begin{figure}[ht]
+  \begin{center}
+    \graphicspath{{../output/distribution/CV_1KG/}}
+    \begin{tabular}{cc}
+      \includegraphics[width=9 cm, height= 6 cm]{dist_gestalt.png}&
+      \includegraphics[width=9 cm, height= 6 cm]{dist_FM.png}\\
+      \includegraphics[width=9 cm, height= 6 cm]{dist_cadd.png}&
+      \includegraphics[width=9 cm, height= 6 cm]{dist_boqa.png}\\
+      \multicolumn{2}{c}{\includegraphics[width=9 cm, height= 6 cm]{dist_pheno.png}}\\
+    \end{tabular}
+  \caption{Distribution of all feature in 1KG data set}
+  \end{center}
+\end{figure}
+
+%\begin{figure}[ht]
+%  \graphicspath{./}
+%  \includegraphics[width=\textwidth]{rank.png}
+%  \caption{Results of training by simulation data and testing on real
+%  data. This figure shows cumulative percentage of genes which are predicted to corresponding rank.}
+%\end{figure}
+%
+%\begin{figure}[ht]
+%  \graphicspath{./}
+%  \includegraphics[width=\textwidth]{rank_cv.png}
+%  \caption{Results of 10-fold cross validation. This figure shows cumulative percentage of genes which are predicted to corresponding rank.}
+%\end{figure}
+
+%\begin{figure}[ht]
+%  \graphicspath{{diff_1KG_cv/}}
+%  \includegraphics[width=\textwidth]{Venn-4sets_pa.png}
+%  \caption{Venns diagram of feature vector of pathogenic gene.}
+%\end{figure}
+
+%\input{diff_result.tex}
+%
+%\graphicspath{{diff_1KG_cv/}}
+%\includegraphics{Venn-4sets_pa.png}
+
+\vfill
+
+\end{document}
