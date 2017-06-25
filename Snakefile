@@ -1,4 +1,4 @@
-configfile: "./classifier.yml"
+workdir: "scripts"
 
 DATA_TYPE = ["1KG", "ExAC", "IRAN"]
 FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1_4",
@@ -9,21 +9,22 @@ FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1
 data = expand("CV_{data}/run.log", data=DATA_TYPE),
 
 
-classify_file = 'scripts/oop_pedia_classifier.py'
+classify_file = 'oop_pedia_classifier.py'
 
 rule all:
     input:
-        expand("output/CV_{data}/run.log", data=DATA_TYPE),
-        expand("output/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
+        expand("../output/cv/CV_{data}/run.log", data=DATA_TYPE),
+        expand("../output/loocv/LOOCV_{data}/run.log", data=DATA_TYPE),
+        expand("../output/exclude/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
 
 rule CV:
     input:
         train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
     output:
-        "output/CV_{data}/run.log"
+        "../output/cv/CV_{data}/run.log"
     params:
         label = "{data}",
-        dir = "output/CV_{data}"
+        dir = "../output/cv/CV_{data}"
     shell:
         """
         python {classify_file} '{input.train}' '{params.label}' -c 10 -o '{params.dir}';
@@ -31,38 +32,38 @@ rule CV:
 
 rule CV_all:
     input:
-        expand("output/CV_{data}/run.log", data=DATA_TYPE)
+        expand("../output/cv/CV_{data}/run.log", data=DATA_TYPE)
     output:
-        touch("output/CV_all.log")
+        touch("../output/cv/CV_all.log")
 
-rule CV_filter:
+rule CV_exclude:
     input:
         train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
     output:
-        "output/CV_{data}_e_{exclude}/run.log"
+        "../output/exclude/CV_{data}_e_{exclude}/run.log"
     params:
         label = "{data}",
-        dir = "output/CV_{data}_e_{exclude}",
+        dir = "../output/exclude/CV_{data}_e_{exclude}",
         exclude_feature = "{exclude}"
     shell:
         """
         python {classify_file} {input.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir};
         """
 
-rule CV_filter_all:
+rule CV_exclude_all:
     input:
-        expand("output/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
+        expand("../output/exclude/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
     output:
-        touch("output/CV_exclude_all.log")
+        touch("../output/exclude/CV_exclude_all.log")
 
 rule LOOCV:
     input:
         train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
     output:
-        "output/LOOCV_{data}/run.log"
+        "../output/loocv/LOOCV_{data}/run.log"
     params:
         label = "{data}",
-        dir = "output/LOOCV_{data}"
+        dir = "../output/loocv/LOOCV_{data}"
     shell:
         """
         python {classify_file} '{input.train}' '{params.label}' -l -o '{params.dir}'";
@@ -70,9 +71,9 @@ rule LOOCV:
 
 rule LOOCV_all:
     input:
-        expand("output/LOOCV_{data}/run.log", data=DATA_TYPE)
+        expand("../output/loocv/LOOCV_{data}/run.log", data=DATA_TYPE)
     output:
-        touch("output/LOOCV_all.log")
+        touch("../output/loocv/LOOCV_all.log")
 
 rule Report:
     shell:
