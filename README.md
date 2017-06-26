@@ -43,3 +43,36 @@ The command for 10-fold cv and excluding gestalt and feature match score is
 python oop_pedia_classifier.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -o output/exclude/1KG -c 10 -e 0_2
 ```
 
+## Snakemake
+
+You can use snakemake to run different kind of experiments automatically.
+
+### Requirement
+
+1. Install [snakemake](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html). 
+
+2. Create an environment with the required software
+```
+conda env create --name classifier --file environment.yaml
+```
+
+3. Activate the environment
+```
+source activate classifier
+```
+
+### Usage
+* Run 10-fold cross validation on 1KG, ExAC and Iran data sets respectively.
+```
+snakemake -p CV_all --cores 3
+```
+
+* Run loocv on 1KG, ExAC and Iran data sets respectively.
+```
+snakemake -p LOOCV_all --cores 3
+```
+
+* Using all feature combination to run 10-fold cross validation on 1KG, ExAC and Iran data sets respectively.
+```
+snakemake -p CV_exclude_all --cores 3
+```

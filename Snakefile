@@ -66,7 +66,7 @@ rule LOOCV:
         dir = "../output/loocv/LOOCV_{data}"
     shell:
         """
-        python {classify_file} '{input.train}' '{params.label}' -l -o '{params.dir}'";
+        python {classify_file} '{input.train}' '{params.label}' -l -o '{params.dir}';
         """
 
 rule LOOCV_all:
