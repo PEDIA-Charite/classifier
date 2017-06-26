@@ -2,7 +2,6 @@ import json, os
 import warnings
 import numpy as np
 import sys
-from matplotlib import pyplot as plt
 from sklearn import svm
 from sklearn import preprocessing
 from sklearn.neural_network import MLPClassifier
