@@ -9,7 +9,7 @@ FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1
 data = expand("CV_{data}/run.log", data=DATA_TYPE),
 
 
-classify_file = 'oop_pedia_classifier.py'
+classify_file = 'pedia.py'
 
 rule all:
     input:
@@ -27,7 +27,7 @@ rule CV:
         dir = "../output/cv/CV_{data}"
     shell:
         """
-        python {classify_file} '{input.train}' '{params.label}' -c 10 -o '{params.dir}';
+        python {classify_file} '{input.train}' '{params.label}' -c 10 -g -o '{params.dir}';
         """
 
 rule CV_all:
@@ -47,7 +47,7 @@ rule CV_exclude:
         exclude_feature = "{exclude}"
     shell:
         """
-        python {classify_file} {input.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir};
+        python {classify_file} {input.train} {params.label} -c 10 -g -e {params.exclude_feature} -o {params.dir};
         """
 
 rule CV_exclude_all:
@@ -66,7 +66,7 @@ rule LOOCV:
         dir = "../output/loocv/LOOCV_{data}"
     shell:
         """
-        python {classify_file} '{input.train}' '{params.label}' -l -o '{params.dir}';
+        python {classify_file} '{input.train}' '{params.label}' -l -g -o '{params.dir}';
         """
 
 rule LOOCV_all:

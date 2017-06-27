@@ -9,7 +9,6 @@ from sklearn import svm
 from sklearn import preprocessing
 from sklearn.neural_network import MLPClassifier
 from sklearn.externals import joblib
-from sample import Sample
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 logging.basicConfig(filename='run.log', level=logging.INFO)
@@ -39,10 +38,8 @@ class Data:
     LABEL_IDX = 1
     GENE_IDX = 2
 
-    def __init__(self, samples=[], casedisgene=[]):
+    def __init__(self):
         self.data = {}
-
-        self.casedisgene = casedisgene
 
     def loadData(self, input_file, filter_field=None):
         filter_cases = []

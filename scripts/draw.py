@@ -141,7 +141,7 @@ def manhattan(pedia, path, ID='all'):
 
 
 
-def rank(pedia, col, lab, path, score='pedia'):
+def draw_rank(col, lab, path):
     """A function to evaluate (rank) the results of the classification and put into a plot.
     only to be used after data was classified."""
 
@@ -149,63 +149,30 @@ def rank(pedia, col, lab, path, score='pedia'):
     # col is the color of the plot
     # lab is the label of the plot
 
-    print('ranking results based on', lab)
 
     # a list that will contain lists of the IDs of each case and the rank of the respective pathogenic
     # variant, ranked by the pedia-score
-    combined_rank = []
-    #n_cases = len(self.casedisgene)
 
+    rank = []
     combined_performance = []
-    # will evalute ranks in range 0 to 101)
-    counts = []
-    filename = path + '/rank_gene_' + lab + ".csv"
-    total = len(pedia)
-    with open(filename, 'w') as csvfile:
-        writer = csv.writer(csvfile)
-        cases = []
-        for i in range(99):
-            count = 0
-            for case in pedia:
-                if pedia[case][1][i] == 1:
-                    count += 1
-                    cases.append(case)
-                    writer.writerow([case, i])
-            counts.append(count)
-        over_100 = {key: pedia[key] for key in pedia if key not in cases}
-        for key in over_100.keys():
-            writer.writerow([key, 99])
-        counts.append(len(over_100))
+    filename = path + "/rank_" + lab + ".csv"
 
-        print("Total:"+str(len(pedia)))
-        print('Over 100:'+str(len(over_100)))
-
-                # the absolute number is divided by the total number of cases, so that one has the
-                # fraction of cases having a patho rank not higher than i
-                # appends sens to i, so that combined rank is a list of floats, each float describing
-                # the fraction of cases that have a pathorank lower or eqaul to its index
-                #combined_performance.append(sens)
-
-    tmp = 0
-
-    filename = path + '/rank_' + lab + ".csv"
-    with open(filename, 'w') as csvfile:
-        writer = csv.writer(csvfile)
-        rank = 1
-        for count in counts:
-            writer.writerow([rank, count])
-            rank += 1
-            tmp += count
-            combined_performance.append(tmp / total)
-
+    total = 0
+    with open(filename, 'r') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            rank.append(int(row[1]))
+            total += int(row[1])
+    c_rank = 0
+    for value in rank:
+        c_rank += value
+        combined_performance.append(c_rank/total)
 
     plt.figure(figsize=(18, 12))
     plt.plot(range(1, len(combined_performance)+1), combined_performance[0:len(combined_performance)], color=col, alpha=0.6, label=lab, linewidth=3)
     plt.scatter([1, 10, 100], [combined_performance[0], combined_performance[9], combined_performance[99]], color=col, alpha=0.6, marker='o', s=50)
     print(lab, [combined_performance[0], combined_performance[9], combined_performance[99]])
-    #print(lab,[combined_performance[1],combined_performance[10],combined_performance[100]],'fraction passed filter:',(npf/n_cases))
 
-    #the last lines of code are only needed to display the results
     plt.ylim(0, 1.01)
     plt.xlim(0, 100.5)
     plt.xlabel('rank-cut-off', fontsize=30)

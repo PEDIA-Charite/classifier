@@ -1,7 +1,7 @@
 # classifier
 ## Usage:
 ```
-python oop_pedia_classifier.py train_path train_label -t test_path -o output_path
+python pedia.py train_path train_label -t test_path -o output_path
 ```
 
 The following parameters are required to run pedia:
@@ -25,22 +25,26 @@ The optional parameters are:
 
 * -e feature. Exclude specific features. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.
 
+* -g Flag enables drawing manhattan plots and ranking plot
+
 ## Example:
+Under directory 'scripts/', execute the following command. The output will be in output/ 
+directory.
 Therefore, if you run on solexa server, the command for testing on another data set is
 ```
-python oop_pedia_classifier.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -t /data/8/projects/PEDIA/3_simulation/json_simulation/real/test -o output/1KG
+python pedia.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -t /data/8/projects/PEDIA/3_simulation/json_simulation/real/test -o ../output/1KG -g
 ```
 The command for 10-fold cross validation is
 ```
-python oop_pedia_classifier.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -o output/cv/1KG -c 10
+python pedia.py /data/8/projects/PEDIA/3_simulation/json_simulation/1KG/CV/ 1KG -o ../output/cv/1KG -c 10 -g
 ```
 The command for loocv is
 ```
-python oop_pedia_classifier.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -o output/loocv/1KG -l
+python pedia.py /data/8/projects/PEDIA/3_simulation/json_simulation/1KG/CV/ 1KG -o ../output/loocv/1KG -l -g
 ```
 The command for 10-fold cv and excluding gestalt and feature match score is
 ```
-python oop_pedia_classifier.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -o output/exclude/1KG -c 10 -e 0_2
+python pedia.py /data/8/projects/PEDIA/3_simulation/json_simulation/1KG/CV/ 1KG -o ../output/exclude/1KG -c 10 -e 0_2 -g
 ```
 
 ## Snakemake

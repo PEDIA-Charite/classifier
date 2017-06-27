@@ -13,9 +13,9 @@ import csv
 import argparse
 from data import Data
 from classifier import *
-from draw import *
 from time import gmtime, strftime
 from json_to_table import parse_json
+from rank import *
 
 def main():
 
@@ -23,6 +23,10 @@ def main():
     TEST_MODE = 0
     CV_MODE = 1
     LOOCV_MODE = 2
+
+    # Graph
+    NO_GRAPH = 0
+    GRAPH = 1
 
     # Parse input arguments
     parser = argparse.ArgumentParser(description='Run classifier to get PEDIA score')
@@ -33,6 +37,7 @@ def main():
     parser.add_argument('-c', '--cv', type=int, help='Enable k-fold cross validation. Default 10-fold')
     parser.add_argument('-l', '--loocv', action='store_true', help='Enable group leave one out cross validation')
     parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
+    parser.add_argument('-g', '--graph', action='store_true', help='Enable manhattan plot')
 
     args = parser.parse_args()
     train_path = args.Train_path
@@ -43,6 +48,7 @@ def main():
     test_path = None
 
     mode = TEST_MODE
+    graph_mode = NO_GRAPH
 
     if args.cv is not None:
         fold = args.cv
@@ -63,6 +69,11 @@ def main():
         filter_feature = list(map(int, args.exclude.split("_")))
     else:
         filter_feature = None
+
+    if args.graph:
+        graph_mode = GRAPH
+        from draw import manhattan
+        from draw import draw_rank
 
     # Create output folder if not exist
     if not os.path.exists(output_path):
@@ -110,10 +121,12 @@ def main():
 
 
     # draw manhattan plot
-    for case in pedia:
-        manhattan(pedia, output_path, case)
 
-    rank(pedia, 'red', train_label, output_path)
+    rank(pedia, train_label, output_path)
+    if graph_mode == 1:
+        for case in pedia:
+            manhattan(pedia, output_path, case)
+        draw_rank('red', train_label, output_path)
 
 if __name__ == '__main__':
     main()
