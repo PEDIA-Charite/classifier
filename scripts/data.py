@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
-import json, os
-import warnings
+import os
 import numpy as np
 import sys
 import logging
 import csv
-from sklearn import svm
-from sklearn import preprocessing
-from sklearn.neural_network import MLPClassifier
-from sklearn.externals import joblib
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-logging.basicConfig(filename='run.log', level=logging.INFO)
+# Setup logging
 logger = logging.getLogger(__name__)
+console_handle = logging.StreamHandler()
+console_handle.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
+console_handle.setFormatter(formatter)
+logger.addHandler(console_handle)
 
 class Data:
     """Common class for a list of instances of the class Samples
@@ -63,7 +62,7 @@ class Data:
                 if filter_field != None:
                     if int(row["label"]) == 1:
                         if row[filter_field] == 'nan':
-                            logger.info("%s - %s has no %s score", case, row["gene_symbol"], filter_field)
+                            logger.debug("%s - %s has no %s score", case, row["gene_symbol"], filter_field)
                             filter_cases.append(case)
 
             for key in list(self.data):

@@ -6,9 +6,13 @@ import sys
 import logging
 import csv
 
-logging.basicConfig(filename='run.log', level=logging.INFO)
+# Setup logging
 logger = logging.getLogger(__name__)
-
+console_handle = logging.StreamHandler()
+console_handle.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
+console_handle.setFormatter(formatter)
+logger.addHandler(console_handle)
 
 def rank(pedia, lab, path):
     """A function to evaluate (rank) the results of the classification and put into a plot.
@@ -17,7 +21,7 @@ def rank(pedia, lab, path):
     # data is what is to be analyzed, it must have the structure of alldatascored in classify()
     # lab is the label of the plot
 
-    print('ranking results based on', lab)
+    logger.debug('ranking results based on %s', lab)
 
     # a list that will contain lists of the IDs of each case and the rank of the respective pathogenic
     # variant, ranked by the pedia-score
@@ -45,8 +49,7 @@ def rank(pedia, lab, path):
             writer.writerow([key, 99])
         counts.append(len(over_100))
 
-        print("Total:"+str(len(pedia)))
-        print('Over 100:'+str(len(over_100)))
+        logger.info("Total: %d", len(pedia))
 
                 # the absolute number is divided by the total number of cases, so that one has the
                 # fraction of cases having a patho rank not higher than i
@@ -62,7 +65,10 @@ def rank(pedia, lab, path):
         rank = 1
         for count in counts:
             writer.writerow([rank, count])
-            rank += 1
             tmp += count
-            combined_performance.append(tmp / total)
+            if rank == 1:
+                logger.info('Rank 1: %d', count)
+            if rank == 10:
+                logger.info('Rank 2-10: %d', tmp-counts[0])
+            rank += 1
 

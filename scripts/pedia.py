@@ -5,17 +5,21 @@ Created on Mon Feb 20 09:56:23 2017
 @author: Martin
 """
 
-import json, os
-import warnings
+import os
 import numpy as np
 import sys
 import csv
 import argparse
+import logging
 from data import Data
 from classifier import *
-from time import gmtime, strftime
 from json_to_table import parse_json
+from json_to_table import parse_json_stdin
 from rank import *
+from version import __version__
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 def main():
 
@@ -28,6 +32,10 @@ def main():
     NO_GRAPH = 0
     GRAPH = 1
 
+    # Running Mode
+    NORMAL_MODE = 0
+    SERVER_MODE = 1
+
     # Parse input arguments
     parser = argparse.ArgumentParser(description='Run classifier to get PEDIA score')
     parser.add_argument('Train_path', help='path of training data')
@@ -38,6 +46,7 @@ def main():
     parser.add_argument('-l', '--loocv', action='store_true', help='Enable group leave one out cross validation')
     parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
     parser.add_argument('-g', '--graph', action='store_true', help='Enable manhattan plot')
+    parser.add_argument('-s', '--server', action='store_true', help='Enable server mode')
 
     args = parser.parse_args()
     train_path = args.Train_path
@@ -49,19 +58,36 @@ def main():
 
     mode = TEST_MODE
     graph_mode = NO_GRAPH
+    running_mode = NORMAL_MODE
+
+    # Create output folder if not exist
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    # Setup logging
+    log_file = output_path + '/run.log'
+    logging.basicConfig(filename=log_file, format='%(asctime)s: %(name)s - %(message)s', datefmt='%m-%d %H:%M', level=logging.DEBUG, filemode='w')
+    console_handle = logging.StreamHandler()
+    console_handle.setLevel(logging.INFO)
+
+    formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
+    console_handle.setFormatter(formatter)
+    logger.addHandler(console_handle)
+
+    logger.info("Start pedia version %s", __version__)
 
     if args.cv is not None:
         fold = args.cv
         mode = CV_MODE
-        print("CV: ", fold)
+        logger.info("CV: %d", fold)
     elif args.loocv:
         mode = LOOCV_MODE
-        print("LOOCV")
+        logger.info("LOOCV")
     else:
         test_path = args.test
         mode = TEST_MODE
-        if test_path == None:
-            sys.stderr.write('Error: Please provide testing data path with --test, if you are not using cross validation.\n')
+        if test_path == None and not args.server:
+            logger.error('Error: Please provide testing data path with --test, if you are not using cross validation.\n')
             parser.print_help()
             sys.exit(1)
 
@@ -75,24 +101,31 @@ def main():
         from draw import manhattan
         from draw import draw_rank
 
-    # Create output folder if not exist
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
+    if args.server:
+        running_mode = SERVER_MODE
+    else:
+        running_mode = NORMAL_MODE
 
-    # Create file for saving command
-    fp = open(output_path + "/run.log", 'w')
-    fp.write("Time:" + strftime("%Y-%m-%d %H:%M:%S", gmtime()) + "\n")
-    fp.write("Command:" + str(args) + "\n")
-    fp.write("Input directory:" + train_path + "\n")
-    fp.write("Output directory:" + output_path + "\n")
-    fp.write("Exclude features:" + str(filter_feature) + "\n")
-    fp.close()
+    logger.debug("Command: %s", str(args))
+    logger.info("Input directory: %s", train_path)
+    logger.info("Output directory: %s", output_path)
+    logger.info("Exclude features: %s", str(filter_feature))
+    running_mode_str = "Normal"
+    if running_mode == SERVER_MODE:
+        running_mode_str = "Server"
+    logger.info("Running mode: %s", running_mode_str)
 
     # Parse json files from Training folder and Testing folder
+    logger.info("Parse training json files from %s", train_path)
     parse_json(train_path, train_file)
 
     if mode == TEST_MODE:
-        parse_json(test_path, test_file)
+        if running_mode == NORMAL_MODE:
+            logger.info("Parse testing json files from %s", test_path)
+            parse_json(test_path, test_file)
+        else:
+            logger.info("Parse testing json file from stdin")
+            parse_json_stdin(test_file)
 
     # Load training data and testing data
     train_data = Data()
@@ -113,11 +146,11 @@ def main():
         test_data.loadData(test_file, 'gestalt_score')
         test_data.preproc(features_default)
         test = test_data.data
-        pedia = classify(train, test, output_path, filter_feature)
+        pedia = classify(train, test, output_path, running_mode, filter_feature)
     elif mode == LOOCV_MODE:
-        pedia = classify_loocv(train, output_path, filter_feature)
+        pedia = classify_loocv(train, output_path, running_mode, filter_feature)
     else:
-        pedia = classify_cv(train, output_path, fold, filter_feature)
+        pedia = classify_cv(train, output_path, fold, running_mode, filter_feature)
 
 
     # draw manhattan plot

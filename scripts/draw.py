@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-import json, os
-import warnings
+import os
 import numpy as np
 import sys
 import logging
@@ -9,12 +8,16 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-logging.basicConfig(filename='run.log', level=logging.INFO)
+genepos = {}
+chr_sizes = [249250621, 243199373, 198022430, 191154276, 180915260, 171115067, 159138663, 146364022, 141213431, 135534747, 135006516, 133851895, 115169878, 107349540, 102531392, 90354753, 81195210, 78077248, 59128983, 63025520, 48129895, 51304566, 155270560, 59373566, 16571]
+
+# Setup logging
 logger = logging.getLogger(__name__)
-
-
-genepos={}
-chr_sizes=[249250621, 243199373, 198022430, 191154276, 180915260, 171115067, 159138663, 146364022, 141213431, 135534747, 135006516, 133851895, 115169878, 107349540, 102531392, 90354753, 81195210, 78077248, 59128983, 63025520, 48129895, 51304566, 155270560, 59373566, 16571]
+console_handle = logging.StreamHandler()
+console_handle.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
+console_handle.setFormatter(formatter)
+logger.addHandler(console_handle)
 
 def loadPosition():
 
@@ -57,7 +60,7 @@ def manhattan(pedia, path, ID='all'):
                 sc = score[index]
 
                 if gene_symbol not in genepos and patho == 1:
-                    print(gene_symbol)
+                    logger.warning("Can not find gene %s in position file.", gene_symbol)
 
                 if gene_symbol in genepos:
                     chrom = genepos[gene_symbol][0][3:]
@@ -171,7 +174,7 @@ def draw_rank(col, lab, path):
     plt.figure(figsize=(18, 12))
     plt.plot(range(1, len(combined_performance)+1), combined_performance[0:len(combined_performance)], color=col, alpha=0.6, label=lab, linewidth=3)
     plt.scatter([1, 10, 100], [combined_performance[0], combined_performance[9], combined_performance[99]], color=col, alpha=0.6, marker='o', s=50)
-    print(lab, [combined_performance[0], combined_performance[9], combined_performance[99]])
+    logger.info("%s 1:%f 2-10:%f 100:%f", lab, combined_performance[0], combined_performance[9], combined_performance[99])
 
     plt.ylim(0, 1.01)
     plt.xlim(0, 100.5)

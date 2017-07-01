@@ -1,27 +1,31 @@
 # -*- coding: utf-8 -*-
-import json, os
-import warnings
+import os
+import sys
 import numpy as np
 import logging
 import csv
 from sklearn import preprocessing
 from sklearn.model_selection import LeaveOneGroupOut
 from sklearn.externals import joblib
-from sample import Sample
 from data import Data
-import getopt
 from sklearn import svm, datasets, ensemble
 from scipy import interp
 from itertools import cycle
 from sklearn.model_selection import KFold
-import gzip
 
 
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-logging.basicConfig(filename='run.log', level=logging.INFO)
+# Setup logging
 logger = logging.getLogger(__name__)
+console_handle = logging.StreamHandler()
+console_handle.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
+console_handle.setFormatter(formatter)
+logger.addHandler(console_handle)
 
-def classify(train_data, test_data, path, filter_feature=None):
+NORMAL_MODE = 0
+SERVER_MODE = 1
+
+def classify(train_data, test_data, path, mode=NORMAL_MODE, filter_feature=None):
     """ SVM classification of all samples in the instance of Data against a given training
     data set that is also an instance of class Data """
 
@@ -37,22 +41,20 @@ def classify(train_data, test_data, path, filter_feature=None):
 
         [y.append(value) for value in train_data[case][1]]
 
-    print("Classification preparation complete")
     X = np.array(X)
     X = X.astype(float)
-    # normalizer = preprocessing.Normalizer().fit(X)
     # data is scaled to values between 1 and 0 using minmax scaler
     normalizer = preprocessing.MinMaxScaler().fit(X)
     X = normalizer.transform(X)
     y = np.array(y)
 
-    print("start train")
+    logger.info("Start training")
     # the classifier is balanced because class 0 exceeds class 1 by far,
     # (only one pathogenic mutation per case,but several hundred genes per case)
     clf = svm.SVC(kernel='poly', C=1, degree=2, probability=False, class_weight='balanced')
     clf.fit(X, y)
 
-    print("Start to test")
+    logger.info("Start testing")
     pedia = {}
     for case in test_data:
         test_X = []
@@ -77,13 +79,21 @@ def classify(train_data, test_data, path, filter_feature=None):
         gene = gene[sorted_index]
         pedia.update({case:[score, pathogenicity, gene]})
 
-        filename = path + "/" + case + ".csv"
-        with open(filename, 'w') as csvfile:
+        if mode == NORMAL_MODE:
+            filename = path + "/" + case + ".csv"
+            with open(filename, 'w') as csvfile:
+                fieldnames = ['gene_id', 'pedia_score', 'label']
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                for index in range(len(score)):
+                    writer.writerow({'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
+        else:
             fieldnames = ['gene_id', 'pedia_score', 'label']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
             writer.writeheader()
             for index in range(len(score)):
                 writer.writerow({'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
+
 
     return pedia
 
@@ -144,24 +154,24 @@ def classify_RF(train_data, test_data, path):
     return pedia
 
 
-def classify_cv(data, path, k_fold, filter_feature=None):
+def classify_cv(data, path, k_fold, running_mode, filter_feature=None):
     kf = KFold(n_splits=k_fold)
     sample_names = np.array(list(data.keys()))
 
     fold_count = 1
     pedia = {}
     for train_idx, test_idx in kf.split(sample_names):
-        print("Start fold ", fold_count)
+        logger.info("Start fold %d", fold_count)
         train_keys = sample_names[train_idx]
         test_keys = sample_names[test_idx]
         train = {key:data[key] for key in train_keys}
         test = {key:data[key] for key in test_keys}
-        pedia.update(classify(train, test, path, filter_feature))
+        pedia.update(classify(train, test, path, running_mode, filter_feature))
         fold_count += 1
 
     return pedia
 
-def classify_loocv(data, path, filter_feature=None):
+def classify_loocv(data, path, running_mode, filter_feature=None):
     sample_names = np.array(list(data.keys()))
     genes = []
     for name in sample_names:
@@ -173,17 +183,16 @@ def classify_loocv(data, path, filter_feature=None):
     fold_count = 1
     pedia = {}
 
-    csvfile =  open(path + "/loocv_group.csv", 'w')
+    csvfile = open(path + "/loocv_group.csv", 'w')
     writer = csv.writer(csvfile)
     for train_idx, test_idx in logo.split(sample_names, groups=genes):
-        print("Start fold ", fold_count)
+        logger.info("Start fold %d", fold_count)
         train_keys = sample_names[train_idx]
         test_keys = sample_names[test_idx]
-        print(np.array(genes)[test_idx][0])
         train = {key:data[key] for key in train_keys}
 
         test = {key:data[key] for key in test_keys}
-        pedia.update(classify(train, test, path, filter_feature))
+        pedia.update(classify(train, test, path, running_mode, filter_feature))
         fold_count += 1
 
         writer.writerow([np.array(genes)[test_idx][0], test_keys.tolist()])

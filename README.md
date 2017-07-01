@@ -27,6 +27,16 @@ The optional parameters are:
 
 * -g Flag enables drawing manhattan plots and ranking plot
 
+* -s Flag enables server mode. This flag is for running on server.
+
+If you want to run on server, the testing json file is from stdin, and the output pedia score is to stdout.
+Hence, you don't need to use -t in server mode. The following command is the example for running on server.
+```
+cat /data/8/projects/PEDIA/3_simulation/json_simulation/1KG/CV/131037.json | python pedia.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -s > pedia_score.csv
+```
+The pedia score for this json file is in pedia_score.csv
+
+
 ## Example:
 Under directory 'scripts/', execute the following command. The output will be in output/ 
 directory.
