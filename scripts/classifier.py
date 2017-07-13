@@ -51,8 +51,9 @@ def classify(train_data, test_data, path, mode=NORMAL_MODE, filter_feature=None)
     logger.info("Start training")
     # the classifier is balanced because class 0 exceeds class 1 by far,
     # (only one pathogenic mutation per case,but several hundred genes per case)
-    clf = svm.SVC(kernel='poly', C=1, degree=2, probability=False, class_weight='balanced')
+    clf = svm.SVC(kernel='linear', C=1, probability=False, class_weight='balanced')
     clf.fit(X, y)
+    logger.info("Feature weights %s", str(clf.coef_[0]))
 
     logger.info("Start testing")
     pedia = {}
