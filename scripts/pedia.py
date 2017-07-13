@@ -108,8 +108,9 @@ def main():
 
     if args.graph:
         graph_mode = GRAPH
-        from draw import manhattan
         from draw import draw_rank
+        from draw import manhattan
+        from draw import manhattan_all
 
     if args.server:
         running_mode = SERVER_MODE
@@ -157,10 +158,22 @@ def main():
         test = test_data.data
         pedia = classify_test(train, test, output_path, running_mode, exclude_feature)
 
+        rank(pedia, train_label, output_path)
+        if graph_mode == GRAPH:
+            for case in pedia:
+                manhattan(pedia, output_path, case)
+            manhattan_all(pedia, output_path)
+            draw_rank('red', train_label, output_path)
+
     elif mode == LOOCV_MODE:
         train = train_data.data
         pedia = classify_loocv(train, output_path, running_mode, exclude_feature)
 
+        rank(pedia, train_label, output_path)
+        if graph_mode == GRAPH:
+            for case in pedia:
+                manhattan(pedia, output_path, case)
+            draw_rank('red', train_label, output_path)
 
     else:
         for ite in range(CV_REPEATE):

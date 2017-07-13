@@ -100,9 +100,10 @@ def manhattan(pedia, path, ID='all'):
                             names_y.append(sc)
 
             plt.figure(figsize=(32, 16))
-            plt.scatter(s_pos, sanos, color='#70ACC0', alpha=0.6, marker='o', s=200, label=('neutrals')) #s=30
-            plt.scatter(s_pos2, sanos2, color='#008B8B', alpha=0.6, marker='o', s=200, label=('neutrals')) #s=30  #385660
-            plt.scatter(p_pos, pathos, color='red', marker='o', s=200, label='pathogenic') #s=30
+            plt.scatter(s_pos, sanos, color='#70ACC0', alpha=0.6, marker='o', s=200, label=('neutrals'))
+            plt.scatter(s_pos2, sanos2, color='#008B8B', alpha=0.6, marker='o', s=200, label=('neutrals'))
+            plt.scatter(p_pos, pathos, color='red', marker='o', s=200, label='pathogenic')
+            plt.axhline(y=0, linestyle='dashed', linewidth=1)
 
             for i in range(len(names)):
                 plt.annotate(names[i], xy = (names_x[i], names_y[i]), xytext = (names_x[i], names_y[i]), fontsize=50, color='#AA1C7D')
@@ -143,6 +144,117 @@ def manhattan(pedia, path, ID='all'):
             plt.close()
 
 
+def manhattan_all(pedia, path):
+    """ Displays the information in Data as a manhattan plot. If the optional variable ID is set
+    to a string matching a case ID, only the results of this case will be displayed."""
+
+    if not genepos:
+        loadPosition()
+
+    plt.figure(figsize=(32, 16))
+    sanos = []
+    sanos2 = []
+    pathos = []
+    s_pos = []
+    s_pos2 = []
+    p_pos = []
+    names = []
+    names_x = []
+    names_y = []
+    for case in pedia:
+
+        smpl_case = case
+        score = np.array(pedia[case][0])
+        pathogenicity = np.array(pedia[case][1])
+        gene = np.array(pedia[case][2])
+        length = len(score)
+        for index in range(length):
+            gene_symbol = gene[index]
+            patho = pathogenicity[index]
+            sc = score[index]
+
+            if gene_symbol not in genepos and patho == 1:
+                logger.warning("Can not find gene %s in position file.", gene_symbol)
+
+            if gene_symbol in genepos:
+                chrom = genepos[gene_symbol][0][3:]
+                if chrom == 'X':
+                    chrom = 23
+                elif chrom == 'Y':
+                    chrom = 24
+                elif chrom == 'M':
+                    chrom = 25
+                else:
+                    chrom = int(chrom)
+
+                pos = 0
+                for i in range(chrom - 1):
+                    pos += chr_sizes[i] + 10 ** 6
+                pos += int(genepos[gene_symbol][1])
+
+                if patho == 0:
+                    if chrom % 2 == 0:
+                        sanos2.append(sc)
+                        s_pos2.append(pos)
+                    else:
+                        sanos.append(sc)
+                        s_pos.append(pos)
+
+                if patho == 1:
+                    pathos.append(sc)
+                    p_pos.append(pos)
+                    if gene_symbol in names:
+                        for i in range(len(names)):
+                            if names[i] == gene_symbol:
+                                if names_y[i] < sc:
+                                    names_y[i] = sc
+                    if gene_symbol not in names:
+                        names.append(gene_symbol + "-" + case)
+                        names_x.append(pos)
+                        names_y.append(sc)
+
+    plt.scatter(s_pos, sanos, color='#70ACC0', alpha=0.6, marker='o', s=200, label=('neutrals')) #s=30
+    plt.scatter(s_pos2, sanos2, color='#008B8B', alpha=0.6, marker='o', s=200, label=('neutrals')) #s=30  #385660
+    plt.scatter(p_pos, pathos, color='red', marker='o', s=200, label='pathogenic') #s=30
+    plt.axhline(y=0, linestyle='dashed', linewidth=1)
+
+    for i in range(len(names)):
+        plt.annotate(names[i], xy = (names_x[i], names_y[i]), xytext = (names_x[i], names_y[i]), fontsize=15, color='#AA1C7D')
+    plt.xlabel('chromosomal position', fontsize=28)
+
+    ticks = []
+    tick = 0
+    for i in chr_sizes:
+        tick += i / 2
+        ticks.append(tick)
+        tick += (i / 2) + 10 ** 6
+    plt.xticks(ticks)
+    plt.ylabel('pedia score', fontsize=38)
+    frame1 = plt.gca()
+    chr_names = []
+
+    for i in range(1,26):
+        if i == 23:
+            chr_names.append('X')
+        elif i == 24:
+            chr_names.append('Y')
+        elif i == 25:
+            chr_names.append('M')
+        else:
+            chr_names.append(str(i))
+
+    frame1.axes.xaxis.set_ticklabels(chr_names, fontsize=25)
+    frame1.axes.tick_params(axis='x',length=0)
+    frame1.axes.tick_params(axis='y', labelsize=25)
+    y_min = min([min(sanos), min(sanos2), min(pathos)])
+    y_max = max([max(sanos), max(sanos2), max(pathos)])
+    plt.ylim(y_min, y_max+(y_max/10)) #ymin-(ymax/30)
+    plt.xlim(0, ticks[-1]+(chr_sizes[-1]/2)+10**6)
+    plt.title('all case')
+    filename = path + "/manhattan_all.png"
+    plt.legend(loc='upper left', fontsize=25)
+    plt.savefig(filename)
+    plt.close()
 
 def draw_rank(col, lab, path):
     """A function to evaluate (rank) the results of the classification and put into a plot.
