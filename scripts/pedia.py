@@ -36,6 +36,10 @@ def main():
     NORMAL_MODE = 0
     SERVER_MODE = 1
 
+    # CV Repetition
+    CV_REPEATE = 10
+
+
     # Parse input arguments
     parser = argparse.ArgumentParser(description='Run classifier to get PEDIA score')
     parser.add_argument('Train_path', help='path of training data')

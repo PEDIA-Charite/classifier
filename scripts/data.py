@@ -80,20 +80,3 @@ class Data:
 
             logger.info("Input %s: total %d cases", input_file, len(self.data))
 
-    def getFeatureDefault(self):
-        features_default = []
-        feature_dim = next(iter(self.data.values()))[self.FEATURE_IDX].shape[1]
-        for index in range(feature_dim):
-            feature_value = np.concatenate([self.data[case][self.FEATURE_IDX][:, index] for case in self.data], axis=0)
-            m = np.nanmin(feature_value.astype(np.float))
-            features_default.append(m)
-
-        return features_default
-
-    def preproc(self, features_default):
-        feature_dim = len(features_default)
-        for index in range(feature_dim):
-            for case in self.data:
-                data = self.data[case][self.FEATURE_IDX]
-                data[data[:, index] == 'nan', index] = features_default[index]
-

@@ -154,8 +154,17 @@ def classify_RF(train_data, test_data, path):
     return pedia
 
 
+def classify_test(train, test, path, running_mode, filter_feature=None):
+    default_value = get_feature_default(train)
+    set_default(train, default_value)
+    set_default(test, default_value)
+
+    pedia = classify(train, test, path, running_mode, filter_feature)
+
+    return pedia
+
 def classify_cv(data, path, k_fold, running_mode, filter_feature=None):
-    kf = KFold(n_splits=k_fold)
+    kf = KFold(n_splits=k_fold, shuffle=True)
     sample_names = np.array(list(data.keys()))
 
     fold_count = 1
@@ -164,8 +173,14 @@ def classify_cv(data, path, k_fold, running_mode, filter_feature=None):
         logger.info("Start fold %d", fold_count)
         train_keys = sample_names[train_idx]
         test_keys = sample_names[test_idx]
+
         train = {key:data[key] for key in train_keys}
         test = {key:data[key] for key in test_keys}
+
+        default_value = get_feature_default(train)
+        set_default(train, default_value)
+        set_default(test, default_value)
+
         pedia.update(classify(train, test, path, running_mode, filter_feature))
         fold_count += 1
 
@@ -189,14 +204,36 @@ def classify_loocv(data, path, running_mode, filter_feature=None):
         logger.info("Start fold %d", fold_count)
         train_keys = sample_names[train_idx]
         test_keys = sample_names[test_idx]
-        train = {key:data[key] for key in train_keys}
 
+        train = {key:data[key] for key in train_keys}
         test = {key:data[key] for key in test_keys}
+
+        default_value = get_feature_default(train)
+        set_default(train, default_value)
+        set_default(test, default_value)
+
         pedia.update(classify(train, test, path, running_mode, filter_feature))
         fold_count += 1
 
         writer.writerow([np.array(genes)[test_idx][0], test_keys.tolist()])
     return pedia
+
+def get_feature_default(data):
+    features_default = []
+    feature_dim = next(iter(data.values()))[Data.FEATURE_IDX].shape[1]
+    for index in range(feature_dim):
+        feature_value = np.concatenate([data[case][Data.FEATURE_IDX][:, index] for case in data], axis=0)
+        m = np.nanmin(feature_value.astype(np.float))
+        features_default.append(m)
+    return features_default
+
+def set_default(data, features_default):
+    feature_dim = len(features_default)
+    for index in range(feature_dim):
+        for case in data:
+            f_data = data[case][Data.FEATURE_IDX]
+            f_data[f_data[:, index] == 'nan', index] = features_default[index]
+
 
 #def manhattan(self, ID='all', score='pedia'):
 #    """ Displays the information in Data as a manhattan plot. If the optional variable ID is set to a string matching a case ID, only the results of this case will be displayed."""
