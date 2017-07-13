@@ -29,7 +29,6 @@ class Data:
     BOQA_IDX = 3
     PHENO_IDX = 4
 
-
     # FEATURE_IDX is for feature vector which contain the above feature score
     # LABEL_IDX is for pathogenic gene label (0, 1)
     # GENE_IDX is for gene symbol
@@ -39,6 +38,8 @@ class Data:
 
     def __init__(self):
         self.data = {}
+        # Filter dict
+        self.filter_dict = {0: "feature_score", 1: "cadd_phred_score", 2: "gestalt_score", 3: "boqa_score", 4: "pheno_score"}
 
     def loadData(self, input_file, filter_field=None):
         filter_cases = []
@@ -57,12 +58,11 @@ class Data:
                 x.append([row["feature_score"], row["cadd_phred_score"], row["gestalt_score"], row["boqa_score"], row["pheno_score"]])
                 y.append(int(row["label"]))
                 gene.append(row["gene_symbol"])
-
                 # filter the sample which has no the feature we assigned
                 if filter_field != None:
                     if int(row["label"]) == 1:
-                        if row[filter_field] == 'nan':
-                            logger.debug("%s - %s has no %s score", case, row["gene_symbol"], filter_field)
+                        if row[self.filter_dict[filter_field[0]]] == 'nan':
+                            logger.debug("%s - %s has no %s score", case, row["gene_symbol"], self.filter_dict[filter_field[0]])
                             filter_cases.append(case)
 
             for key in list(self.data):

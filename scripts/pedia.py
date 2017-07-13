@@ -47,6 +47,7 @@ def main():
     parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
     parser.add_argument('-g', '--graph', action='store_true', help='Enable manhattan plot')
     parser.add_argument('-s', '--server', action='store_true', help='Enable server mode')
+    parser.add_argument('-f', '--filter_feature', help='Filter sample without specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
 
     args = parser.parse_args()
     train_path = args.Train_path
@@ -92,7 +93,12 @@ def main():
             sys.exit(1)
 
     if args.exclude is not None:
-        filter_feature = list(map(int, args.exclude.split("_")))
+        exclude_feature = list(map(int, args.exclude.split("_")))
+    else:
+        exclude_feature = None
+
+    if args.filter_feature is not None:
+        filter_feature = list(map(int, args.filter_feature.split("_")))
     else:
         filter_feature = None
 
@@ -110,7 +116,9 @@ def main():
     logger.info("Input directory: %s", train_path)
     logger.info("Output directory: %s", output_path)
     logger.info("Exclude features: %s", str(filter_feature))
+
     running_mode_str = "Normal"
+
     if running_mode == SERVER_MODE:
         running_mode_str = "Server"
     logger.info("Running mode: %s", running_mode_str)
@@ -129,12 +137,8 @@ def main():
 
     # Load training data and testing data
     train_data = Data()
-    train_data.loadData(train_file, 'gestalt_score')
+    train_data.loadData(train_file, filter_feature)
 
-    # Get min value of each feature then apply to missing value
-    features_default = train_data.getFeatureDefault()
-    train_data.preproc(features_default)
-    train = train_data.data
 
     # Train classifier by training set and test on testing set
     # Return pedia which contain pedia score, label and gene id
@@ -142,24 +146,35 @@ def main():
     # to be trained by the classifier. For example
     # filter_feature = [FM_IDX, GESTALT_IDX]
     if mode == TEST_MODE:
+        train = train_data.data
+
         test_data = Data()
-        test_data.loadData(test_file, 'gestalt_score')
-        test_data.preproc(features_default)
+        test_data.loadData(test_file, filter_feature)
         test = test_data.data
-        pedia = classify(train, test, output_path, running_mode, filter_feature)
+        pedia = classify_test(train, test, output_path, running_mode, exclude_feature)
+
     elif mode == LOOCV_MODE:
-        pedia = classify_loocv(train, output_path, running_mode, filter_feature)
+        train = train_data.data
+        pedia = classify_loocv(train, output_path, running_mode, exclude_feature)
+
+
     else:
-        pedia = classify_cv(train, output_path, fold, running_mode, filter_feature)
+        for ite in range(CV_REPEATE):
+            logger.info("Start CV repetition %d", ite+1)
+            path = output_path + "/cv_" + str(ite)
+            if not os.path.exists(path):
+                os.makedirs(path)
+            train = train_data.data
+            pedia = classify_cv(train, path, fold, running_mode, exclude_feature)
 
+            rank(pedia, train_label, path)
+            if graph_mode == GRAPH:
+                for case in pedia:
+                    manhattan(pedia, path, case)
+                manhattan_all(pedia, path)
+                draw_rank('red', train_label, path)
+        rank_all_cv(train_label, output_path, CV_REPEATE)
 
-    # draw manhattan plot
-
-    rank(pedia, train_label, output_path)
-    if graph_mode == 1:
-        for case in pedia:
-            manhattan(pedia, output_path, case)
-        draw_rank('red', train_label, output_path)
 
 if __name__ == '__main__':
     main()
