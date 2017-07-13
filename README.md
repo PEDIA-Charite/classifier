@@ -29,6 +29,8 @@ The optional parameters are:
 
 * -s Flag enables server mode. This flag is for running on server.
 
+* -f feature. Filter cases which don't have specific features in pathogenic mutation gene. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. We only support using one feature.
+
 If you want to run on server, the testing json file is from stdin, and the output pedia score is to stdout.
 Hence, you don't need to use -t in server mode. The following command is the example for running on server.
 ```
