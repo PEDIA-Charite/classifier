@@ -9,7 +9,7 @@ import numpy as np
 
 # input file is the csv file which is generated from jsonToTable.py
 input_file = sys.argv[1]
-output_dir = "../output/distribution/" + sys.argv[2] + "/"
+output_dir = "../../output/distribution/" + sys.argv[2] + "/"
 
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
@@ -38,55 +38,45 @@ with open(input_file) as csvfile:
         score = row["gestalt_score"]
         if score == 'nan':
             score = -1
-        else:
-            g_scores.append(float(score))
+        g_scores.append(float(score))
         score = row["feature_score"]
         if score == 'nan':
             score = -1
-        else:
-            f_scores.append(float(score))
+        f_scores.append(float(score))
         score = row["cadd_phred_score"]
         if score == 'nan':
             score = -1
-        else:
-            c_scores.append(float(score))
+        c_scores.append(float(score))
         score = row["boqa_score"]
         if score == 'nan':
             score = -1
-        else:
-            b_scores.append(float(score))
+        b_scores.append(float(score))
         score = row["pheno_score"]
         if score == 'nan':
             score = -1
-        else:
-            p_scores.append(float(score))
+        p_scores.append(float(score))
 
         if int(row["label"]) == 1:
             score = row["gestalt_score"]
             if score == 'nan':
                 score = -1
-            else:
-                g_p_scores.append(float(score))
+            g_p_scores.append(float(score))
             score = row["feature_score"]
             if score == 'nan':
                 score = -1
-            else:
-                f_p_scores.append(float(score))
+            f_p_scores.append(float(score))
             score = row["cadd_phred_score"]
             if score == 'nan':
                 score = -1
-            else:
-                c_p_scores.append(float(score))
+            c_p_scores.append(float(score))
             score = row["boqa_score"]
             if score == 'nan':
                 score = -1
-            else:
-                b_p_scores.append(float(score))
+            b_p_scores.append(float(score))
             score = row["pheno_score"]
             if score == 'nan':
                 score = -1
-            else:
-                p_p_scores.append(float(score))
+            p_p_scores.append(float(score))
 
 score_list.append(g_scores)
 score_list.append(f_scores)
@@ -98,24 +88,6 @@ p_score_list.append(f_p_scores)
 p_score_list.append(c_p_scores)
 p_score_list.append(b_p_scores)
 p_score_list.append(p_p_scores)
-
-x_idx = np.arange(-1.0,1.1,0.05).tolist()
-
-for i, idx in enumerate(x_idx):
-    x_idx[i] = round(x_idx[i], 2)
-y_value_list = []
-for list_idx in range(5):
-    y_value = []
-    for idx, x in enumerate(x_idx):
-        if idx == len(x_idx) - 1:
-            break
-        count = 0
-        for score in score_list[list_idx]:
-            if score >= x and score < x_idx[idx+1] and score != -1:
-                count += 1
-        y_value.append(count)
-    y_value.append(0)
-    y_value_list.append(y_value)
 
 color_list = ['#ffa347','#0064c8','#b42222','#22a5b4','#b47c22','#6db6ff']
 file_names = ['gestalt', 'FM', 'cadd', 'boqa', 'pheno']

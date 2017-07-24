@@ -14,6 +14,7 @@ rownames(data) = genenames
 data = data[apply(data[,-1], 1, function(x) !all(x==0)),]
 ### We transpose matrix first, then scale the column. Column - Actual, Row - Predicted
 data = t(data)
+#x <- as.matrix(data)
 x <- as.matrix(scale(data))
 #x = x[,-which(is.na(x[1,]))]
 
@@ -23,6 +24,7 @@ col.ord <- order.dendrogram(dd.col)
 dd.row <- as.dendrogram(hclust(dist(t(x))))
 row.ord <- order.dendrogram(dd.row)
 
+#xx <- data[col.ord, row.ord]
 xx <- scale(data)[col.ord, row.ord]
 
 xx_names <- attr(xx, "dimnames")

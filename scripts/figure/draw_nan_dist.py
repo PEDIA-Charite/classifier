@@ -59,7 +59,7 @@ def freqDist(x, y, xticks, filename, title, xlabel, total_count):
 
 # input file is the csv file which is generated from jsonToTable.py
 input_file = sys.argv[1]
-output_dir = "../output/nan_dist/" + sys.argv[2] + "/"
+output_dir = "../../output/nan_dist/" + sys.argv[2] + "/"
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 

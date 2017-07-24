@@ -12,6 +12,7 @@
 \usepackage{cite}
 \usepackage{verbatim}
 \usepackage{tikz}
+\usepackage{longtable}
 %\usepackage{gantt}
 
 \usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,fit,positioning,shapes.symbols,chains}
@@ -23,15 +24,75 @@
 
 \maketitle
 
+\section{Data preprocessing}
+We have 348 cases in total. 329 of them are simulated, and 19 are real
+cases. There are 9 cases are excluded in preprocessing, because we can
+not find the pathogenic mutation gene in their gene list. The
+details of cases which we excluded are listed in Table
+\ref{table:problem_case}.
 
+After preprocessing, we have 339 cases, and there are 66 cases without Gestalt score in the pathogenic
+mutation gene. The detail of these cases are listed in Table
+\ref{table:no_gestalt_sample}. Later, we will compare the results
+between using 339 cases and 273 cases.
+
+\input{table/problem_sample.tex}
+\input{table/sample_detail_no_g}
+\section{Results}
+\subsection{Comparision the results between with or without Gestalt
+score in pathogenic gene}
+Table \ref{table:cv} and Table \ref{table:cv_g} show the result of
+10-fold cross validation between using all cases and only using the
+cases with gestalt score in pathogenic mutation gene.
+In Table \ref{table:cv_sample_no_g}, it show the result of 66 cases
+without gestalt score in pathogenic mutation gene.
+The distribution of pedia score are shown on Table \ref{table:pedia_cv}
+and Table \ref{table:pedia_cv_g}.
 \input{table/acc_cv_result.tex}
+\input{table/cv_sample_without_g.tex}
+
+\input{table/pedia_cv_result.tex}
+
+\subsection{Leave one out cross validation}
+The results of LOOCV are in Table \ref{table:loocv} and Table
+\ref{table:loocv_g}.
 \input{table/acc_loocv_result.tex}
+\subsection{Distribution of PEDIA score}
+We list the cases which have pedia score below 0 and between 0 and 1 in
+Table \ref{table:cv_poor_case} and Table \ref{table:cv_poor_g_case}.
+\input{table/pedia_cv_poor_sample.tex}
+%\input{table/gene_cv_result.tex}
+%\input{table/gene_loocv_result.tex}
 
-\input{table/gene_cv_result.tex}
-\input{table/gene_loocv_result.tex}
 
-
-\input{table/acc_exclude_result.tex}
+\begin{figure}[ht]
+  \begin{center}
+    \graphicspath{{./table/}}
+    \begin{tabular}{cc}
+      \includegraphics[width=9 cm, height= 6 cm]{dist_pedia_1KG.png}&
+      \includegraphics[width=9 cm, height= 6 cm]{dist_pedia_g_1KG.png}\\
+      \includegraphics[width=9 cm, height= 6 cm]{dist_pedia_ExAC.png}&
+      \includegraphics[width=9 cm, height= 6 cm]{dist_pedia_g_ExAC.png}\\
+      \includegraphics[width=9 cm, height= 6 cm]{dist_pedia_IRAN.png}&
+      \includegraphics[width=9 cm, height= 6 cm]{dist_pedia_g_IRAN.png}\\
+    \end{tabular}
+  \caption{Distribution of pedia score}
+  \end{center}
+\end{figure}
+\begin{figure}[ht]
+  \begin{center}
+    \graphicspath{{../output/}}
+      \includegraphics[width=16 cm, height= 12 cm]{cv/CV_1KG/cv_0/manhattan_all.png}
+  \caption{Manhattan plot of all cases in 1KG data set}
+  \end{center}
+\end{figure}
+\begin{figure}[ht]
+  \begin{center}
+    \graphicspath{{../output/}}
+      \includegraphics[width=16 cm, height= 12 cm]{cv_g/CV_1KG/cv_0/manhattan_all.png}
+  \caption{Manhattan plot of the cases with gestalt in 1KG data set}
+  \end{center}
+\end{figure}
 \begin{figure}[ht]
   \begin{center}
     \graphicspath{{../output/distribution/CV_1KG/}}
@@ -45,6 +106,11 @@
   \caption{Distribution of all feature in 1KG data set}
   \end{center}
 \end{figure}
+\subsection{Influence of excluding each feature}
+The feature weights of using all cases are 1.99, 12.43, 6.05, 0.3 and
+2.74 for FM, CADD, Gestalt, Boqa and Pheno, and the weights of only
+using the cases with gestalt are 4.9, 12.7, 6.86, 1.00 and 1.56.
+\input{table/acc_exclude_result.tex}
 
 %\begin{figure}[ht]
 %  \graphicspath{./}
