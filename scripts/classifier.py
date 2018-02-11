@@ -61,7 +61,7 @@ def classify(train_data, test_data, path, mode=NORMAL_MODE, filter_feature=None)
         test_X = []
         score = []
         if filter_feature == None:
-            test_X = test_data[case][0]
+            [test_X.append(value) for value in test_data[case][0]]
         else:
             for value in test_data[case][0]:
                 test_X.append(value[~np.in1d(range(len(value)), filter_feature)])
@@ -224,7 +224,7 @@ def get_feature_default(data):
     feature_dim = next(iter(data.values()))[Data.FEATURE_IDX].shape[1]
     for index in range(feature_dim):
         feature_value = np.concatenate([data[case][Data.FEATURE_IDX][:, index] for case in data], axis=0)
-        m = np.nanmin(feature_value.astype(np.float))
+        m = round(np.nanmin(feature_value.astype(np.float)), 10)
         features_default.append(m)
     return features_default
 

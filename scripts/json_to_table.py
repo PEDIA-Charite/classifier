@@ -8,6 +8,7 @@ import csv
 import numpy as np
 import io
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 console = logging.StreamHandler()
@@ -47,14 +48,23 @@ def getKey(case, gene_id):
 
 def parse_json(input_dir, outputfile):
     hashedData = {}
-
-    for filename in glob.glob(input_dir+'/*.json'):
+    file_array = []
+    is_folder = os.path.isdir(input_dir)
+    if is_folder == True:
+        for filename in glob.glob(input_dir+'/*.json'):
+            file_array.append(filename)
+    else:
+        file_array.append(input_dir)
+    for filename in file_array:
         found = False
         geneIDs = []
         r = io.open(filename,'r',encoding='ISO-8859-1')
         data = json.loads(r.read())
         case = data['case_id']
-        gene = data["genomicData"][0]["Test Information"]["Gene Name"]
+        gene = ""
+        if "genomicData" in data:
+            if len(data["genomicData"]) > 0:
+                gene = data["genomicData"][0]["Test Information"]["Gene Name"]
         if gene == 'MLL2':
             gene = 'KMT2D'
         elif gene == 'MLL':
@@ -91,8 +101,7 @@ def parse_json(input_dir, outputfile):
                 phenoScore = max(phenoScore,value["pheno_score"])
 
             hashedData[getKey(case,geneID)] = {"case": case, "gene_symbol": geneSymbol, "gene_id": geneID, "feature_score": featureScore, "cadd_phred_score": caddPhredScore, "combined_score":  combinedScore, "cadd_raw_score":  caddRawSscore, "gestalt_score":  gestaltScore, "boqa_score":  boqaScore, "pheno_score": phenoScore, "label": label}
-
-        if not found:
+        if not found and gene != "":
             logger.warning("Warning: Gene %s is not found in case %s", gene, case)
             for geneID in geneIDs:
                 if getKey(case, geneID) in hashedData:

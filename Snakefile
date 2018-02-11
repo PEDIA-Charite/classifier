@@ -1,5 +1,9 @@
 workdir: "scripts"
 
+subworkflow sim_workflow:
+	workdir: "../3_simulation"
+	snakefile: "../3_simulation/Snakefile"
+
 DATA_TYPE = ["1KG", "ExAC", "IRAN"]
 FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1_4",
            "2_3", "2_4", "3_4", "0_1_2", "0_1_3", "0_1_4", "0_2_3", "0_2_4", "0_3_4", "1_2_3", "1_2_4", "1_3_4", "2_3_4",
@@ -10,6 +14,8 @@ data = expand("CV_{data}/run.log", data=DATA_TYPE),
 
 
 classify_file = 'pedia.py'
+mapping_file = 'mapping.py'
+mapping_vcf_file = 'get_variant.py'
 
 rule all:
     input:
@@ -17,6 +23,57 @@ rule all:
         expand("../output/loocv/LOOCV_{data}/run.log", data=DATA_TYPE),
         expand("../output/exclude/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
 
+rule test:
+    input:
+        train = "/home/la60312/pedia/3_simulation/json_simulation/real/train/{data}/",
+        json = sim_workflow("json_simulation/real/test/{sample}.json")
+    output:
+        csv = "../output/test/{data}/{sample}/{sample}.csv"
+    params:
+        label = "{data}",
+        dir = "../output/test/{data}/{sample}"
+    shell:
+        """
+        python {classify_file} '{input.train}' '{params.label}' -t {input.json} -g -o '{params.dir}';
+        """
+
+rule map_pedia:
+    input:
+        csv = "../output/test/{data}/{sample}/{sample}.csv",
+        json = sim_workflow("json_simulation/real/test/{sample}.json")
+    output:
+        json = "../output/test/{data}/{sample}/{sample}_pedia.json",
+    params:
+        label = "{data}",
+        dir = "../output/test/{data}/{sample}/"
+    shell:
+        """
+        python {mapping_file} --input '{input.json}' --pedia '{input.csv}' --output '{output.json}';
+        """
+
+rule map_vcf:
+    input:
+        csv = "../output/test/{data}/{sample}/{sample}.csv",
+        vcf = sim_workflow("vcf_annotation/{sample}.annotation.vcf.gz")
+    output:
+        vcf = "../output/test/{data}/{sample}/{sample}.vcf.gz",
+    params:
+        label = "{data}",
+        dir = "../output/test/{data}/{sample}/"
+    shell:
+        """
+        python {mapping_vcf_file} --input '{input.vcf}' --pedia '{input.csv}' --output '{output.vcf}';
+        """
+
+rule map:
+    input:
+        vcf = "../output/test/{data}/{sample}/{sample}.vcf.gz",
+        json = "../output/test/{data}/{sample}/{sample}_pedia.json",
+    output:
+        out = touch("../output/test/{data}/{sample}/{sample}.out")
+    params:
+        label = "{data}",
+        dir = "../output/test/{data}/{sample}/"
 rule CV:
     input:
         train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"

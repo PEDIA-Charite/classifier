@@ -117,7 +117,7 @@ def manhattan(pedia, path, ID='all'):
                 tick += (i / 2) + 10 ** 6
             plt.xticks(ticks)
             plt.ylabel('pedia score', fontsize=38)
-            plt.legend(loc='upper left', fontsize=25)
+            plt.legend(loc='center left', prop={'size':23}, bbox_to_anchor=(1,0.5))
             frame1 = plt.gca()
             chr_names = []
 
@@ -134,8 +134,12 @@ def manhattan(pedia, path, ID='all'):
             frame1.axes.xaxis.set_ticklabels(chr_names, fontsize=25)
             frame1.axes.tick_params(axis='x',length=0)
             frame1.axes.tick_params(axis='y', labelsize=25)
-            y_min = min([min(sanos), min(sanos2), min(pathos)])
-            y_max = max([max(sanos), max(sanos2), max(pathos)])
+            if len(pathos) > 0:
+                y_min = min([min(sanos), min(sanos2), min(pathos)])
+                y_max = max([max(sanos), max(sanos2), max(pathos)])
+            else:
+                y_min = min([min(sanos), min(sanos2)])
+                y_max = max([max(sanos), max(sanos2)])
             plt.ylim(y_min, y_max+(y_max/10)) #ymin-(ymax/30)
             plt.xlim(0, ticks[-1]+(chr_sizes[-1]/2)+10**6)
             plt.title(ID)
@@ -246,13 +250,17 @@ def manhattan_all(pedia, path):
     frame1.axes.xaxis.set_ticklabels(chr_names, fontsize=25)
     frame1.axes.tick_params(axis='x',length=0)
     frame1.axes.tick_params(axis='y', labelsize=25)
-    y_min = min([min(sanos), min(sanos2), min(pathos)])
-    y_max = max([max(sanos), max(sanos2), max(pathos)])
+    if len(pathos) > 0:
+        y_min = min([min(sanos), min(sanos2), min(pathos)])
+        y_max = max([max(sanos), max(sanos2), max(pathos)])
+    else:
+        y_min = min([min(sanos), min(sanos2)])
+        y_max = max([max(sanos), max(sanos2)])
     plt.ylim(y_min, y_max+(y_max/10)) #ymin-(ymax/30)
     plt.xlim(0, ticks[-1]+(chr_sizes[-1]/2)+10**6)
     plt.title('all case')
     filename = path + "/manhattan_all.png"
-    plt.legend(loc='upper left', fontsize=25)
+    plt.legend(loc='upper left', prop={'size':6}, bbox_to_anchor=(1,1))
     plt.savefig(filename)
     plt.close()
 
