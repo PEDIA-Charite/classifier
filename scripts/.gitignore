@@ -1,0 +1,7 @@
+# Ignore everything in this directory
+.snakemake
+__pycache__
+
+# Except this file
+!.gitignore
+

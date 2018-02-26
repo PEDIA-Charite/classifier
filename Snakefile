@@ -76,7 +76,7 @@ rule map:
         dir = "../output/test/{data}/{sample}/"
 rule CV:
     input:
-        train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
+        train = "../../3_simulation/json_simulation/{data}/CV/"
     output:
         "../output/cv/CV_{data}/run.log"
     params:
