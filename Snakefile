@@ -74,17 +74,19 @@ rule map:
     params:
         label = "{data}",
         dir = "../output/test/{data}/{sample}/"
+
 rule CV:
     input:
-        train = "../../3_simulation/json_simulation/{data}/CV/"
+        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
         "../output/cv/CV_{data}/run.log"
     params:
         label = "{data}",
-        dir = "../output/cv/CV_{data}"
+        dir = "../output/cv/CV_{data}",
+        train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} '{input.train}' '{params.label}' -c 10 -g -o '{params.dir}';
+        python {classify_file} '{params.train}' '{params.label}' -c 10 -g -o '{params.dir}';
         """
 
 rule CV_all:
@@ -95,16 +97,17 @@ rule CV_all:
 
 rule CV_exclude:
     input:
-        train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
+        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
         "../output/exclude/CV_{data}_e_{exclude}/run.log"
     params:
         label = "{data}",
         dir = "../output/exclude/CV_{data}_e_{exclude}",
-        exclude_feature = "{exclude}"
+        exclude_feature = "{exclude}",
+        train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} {input.train} {params.label} -c 10 -g -e {params.exclude_feature} -o {params.dir};
+        python {classify_file} {params.train} {params.label} -c 10 -g -e {params.exclude_feature} -o {params.dir};
         """
 
 rule CV_exclude_all:
@@ -115,15 +118,16 @@ rule CV_exclude_all:
 
 rule LOOCV:
     input:
-        train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
+        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
         "../output/loocv/LOOCV_{data}/run.log"
     params:
         label = "{data}",
-        dir = "../output/loocv/LOOCV_{data}"
+        dir = "../output/loocv/LOOCV_{data}",
+        train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} '{input.train}' '{params.label}' -l -g -o '{params.dir}';
+        python {classify_file} '{params.train}' '{params.label}' -l -g -o '{params.dir}';
         """
 
 rule LOOCV_all:
@@ -134,15 +138,16 @@ rule LOOCV_all:
 
 rule CV_g:
     input:
-        train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
+        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
         "../output/cv_g/CV_{data}/run.log"
     params:
         label = "{data}",
-        dir = "../output/cv_g/CV_{data}"
+        dir = "../output/cv_g/CV_{data}",
+        train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} '{input.train}' '{params.label}' -c 10 -g -f 2 -o '{params.dir}';
+        python {classify_file} '{params.train}' '{params.label}' -c 10 -g -f 2 -o '{params.dir}';
         """
 
 rule CV_all_g:
@@ -153,15 +158,16 @@ rule CV_all_g:
 
 rule LOOCV_g:
     input:
-        train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
+        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
         "../output/loocv_g/LOOCV_{data}/run.log"
     params:
         label = "{data}",
-        dir = "../output/loocv_g/LOOCV_{data}"
+        dir = "../output/loocv_g/LOOCV_{data}",
+        train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} '{input.train}' '{params.label}' -l -g -f 2 -o '{params.dir}';
+        python {classify_file} '{params.train}' '{params.label}' -l -g -f 2 -o '{params.dir}';
         """
 
 rule LOOCV_all_g:
@@ -172,16 +178,17 @@ rule LOOCV_all_g:
 
 rule CV_exclude_g:
     input:
-        train = "/data/8/projects/PEDIA/3_simulation/json_simulation/{data}/CV/"
+        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
         "../output/exclude_g/CV_{data}_e_{exclude}/run.log"
     params:
         label = "{data}",
         dir = "../output/exclude_g/CV_{data}_e_{exclude}",
-        exclude_feature = "{exclude}"
+        exclude_feature = "{exclude}",
+        train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} {input.train} {params.label} -c 10 -f 2 -g -e {params.exclude_feature} -o {params.dir};
+        python {classify_file} {params.train} {params.label} -c 10 -f 2 -g -e {params.exclude_feature} -o {params.dir};
         """
 
 rule CV_exclude_all_g:
