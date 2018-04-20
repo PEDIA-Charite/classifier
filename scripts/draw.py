@@ -51,7 +51,7 @@ def manhattan(pedia, path, ID='all'):
             smpl_case = case
             score = np.array(pedia[case][0])
             pathogenicity = np.array(pedia[case][1])
-            gene = np.array(pedia[case][2])
+            gene = np.array(pedia[case][3])
             length = len(score)
 
             for index in range(length):
@@ -170,7 +170,7 @@ def manhattan_all(pedia, path):
         smpl_case = case
         score = np.array(pedia[case][0])
         pathogenicity = np.array(pedia[case][1])
-        gene = np.array(pedia[case][2])
+        gene = np.array(pedia[case][3])
         length = len(score)
         for index in range(length):
             gene_symbol = gene[index]

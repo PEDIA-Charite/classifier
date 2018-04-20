@@ -35,6 +35,7 @@ class Data:
     FEATURE_IDX = 0
     LABEL_IDX = 1
     GENE_IDX = 2
+    GENE_NAME_IDX = 3
 
     def __init__(self):
         self.data = {}
@@ -50,14 +51,16 @@ class Data:
             for row in reader:
                 case = row["case"]
                 if not case in self.data:
-                    self.data.update({case:[[], [], []]})
+                    self.data.update({case:[[], [], [], []]})
                 x = self.data[case][self.FEATURE_IDX]
                 y = self.data[case][self.LABEL_IDX]
                 gene = self.data[case][self.GENE_IDX]
+                gene_name = self.data[case][self.GENE_NAME_IDX]
 
                 x.append([row["feature_score"], row["cadd_phred_score"], row["gestalt_score"], row["boqa_score"], row["pheno_score"]])
                 y.append(int(row["label"]))
-                gene.append(row["gene_symbol"])
+                gene.append(row["gene_id"])
+                gene_name.append(row["gene_symbol"])
                 # filter the sample which has no the feature we assigned
                 if filter_field != None:
                     if int(row["label"]) == 1:

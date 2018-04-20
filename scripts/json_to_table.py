@@ -64,22 +64,15 @@ def parse_json(input_dir, outputfile):
         gene = ""
         if "genomicData" in data:
             if len(data["genomicData"]) > 0:
-                gene = data["genomicData"][0]["Test Information"]["Gene Name"]
-        if gene == 'MLL2':
-            gene = 'KMT2D'
-        elif gene == 'MLL':
-            gene = 'KMT2A'
-        elif gene == 'B3GALTL':
-            gene = 'B3GLCT'
-        elif gene == 'CASKIN1':
-            gene = 'KIAA1306'
+                gene = data["genomicData"][0]["Test Information"]["Gene ID"]
+
         for entry in data['geneList']:
-            if entry["gene_symbol"] == gene:
+            if int(entry["gene_id"]) == gene:
                 label = 1
                 found = True
             else:
                 label = 0
-            geneID = entry['gene_id']
+            geneID = int(entry['gene_id'])
             geneIDs.append(geneID)
             geneSymbol = entry['gene_symbol']
             featureScore = entry.get("feature_score", np.nan)
@@ -121,22 +114,15 @@ def parse_json_stdin(outputfile):
     geneIDs = []
     data = json.load(sys.stdin)
     case = data['case_id']
-    gene = data["genomicData"][0]["Test Information"]["Gene Name"]
-    if gene == 'MLL2':
-        gene = 'KMT2D'
-    elif gene == 'MLL':
-        gene = 'KMT2A'
-    elif gene == 'B3GALTL':
-        gene = 'B3GLCT'
-    elif gene == 'CASKIN1':
-        gene = 'KIAA1306'
+    gene = data["genomicData"][0]["Test Information"]["Gene ID"]
+
     for entry in data['geneList']:
-        if entry["gene_symbol"] == gene:
+        if int(entry["gene_id"]) == gene:
             label = 1
             found = True
         else:
             label = 0
-        geneID = entry['gene_id']
+        geneID = int(entry['gene_id'])
         geneIDs.append(geneID)
         geneSymbol = entry['gene_symbol']
         featureScore = entry.get("feature_score", np.nan)

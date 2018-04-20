@@ -73,27 +73,29 @@ def classify(train_data, test_data, path, mode=NORMAL_MODE, filter_feature=None)
         score = np.array(score)
         pathogenicity = np.array(test_data[case][1])
         gene = np.array(test_data[case][2])
+        gene_name = np.array(test_data[case][3])
         length = len(score)
         sorted_index = score.argsort()[::-1][:length]
         score = score[sorted_index]
         pathogenicity = pathogenicity[sorted_index]
         gene = gene[sorted_index]
-        pedia.update({case:[score, pathogenicity, gene]})
+        gene_name = gene_name[sorted_index]
+        pedia.update({case:[score, pathogenicity, gene, gene_name]})
 
         if mode == NORMAL_MODE:
             filename = path + "/" + case + ".csv"
             with open(filename, 'w') as csvfile:
-                fieldnames = ['gene_id', 'pedia_score', 'label']
+                fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'label']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
                 for index in range(len(score)):
-                    writer.writerow({'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
+                    writer.writerow({'gene_name': gene_name[index], 'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
         else:
-            fieldnames = ['gene_id', 'pedia_score', 'label']
+            fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'label']
             writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
             writer.writeheader()
             for index in range(len(score)):
-                writer.writerow({'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
+                writer.writerow({'gene_name': gene_name[index], 'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
 
 
     return pedia
