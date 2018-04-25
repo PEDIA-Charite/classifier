@@ -23,18 +23,37 @@ rule all:
         expand("../output/loocv/LOOCV_{data}/run.log", data=DATA_TYPE),
         expand("../output/exclude/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
 
+
+
 rule test:
     input:
-        train = "/home/la60312/pedia/3_simulation/json_simulation/real/train/{data}/",
-        json = sim_workflow("json_simulation/real/test/{sample}.json")
+        train = sim_workflow("performanceEvaluation/data/Real/train_{data}.csv"),
+        test = sim_workflow("performanceEvaluation/data/Real/test_real.csv")
+    output:
+        csv = "../output/real_test/{data}/run.log"
+    params:
+        label = "{data}",
+        dir = "../output/real_test/{data}/",
+        train = "../../3_simulation/json_simulation/real/{data}/CV",
+        test = "../../3_simulation/json_simulation/real/test/"
+    shell:
+        """
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}';
+        """
+
+rule test_unknown:
+    input:
+        train = sim_workflow("performanceEvaluation/data/CV/{data}.csv"),
+        json = sim_workflow("json_simulation/real/unknown_test/{sample}.json")
     output:
         csv = "../output/test/{data}/{sample}/{sample}.csv"
     params:
         label = "{data}",
-        dir = "../output/test/{data}/{sample}"
+        dir = "../output/test/{data}/{sample}",
+        train = "../../3_simulation/json_simulation/{data}/CV"
     shell:
         """
-        python {classify_file} '{input.train}' '{params.label}' -t {input.json} -g -o '{params.dir}';
+        python {classify_file} '{params.train}' '{params.label}' -t {input.json} -g -o '{params.dir}';
         """
 
 rule map_pedia:
@@ -54,6 +73,7 @@ rule map_pedia:
 rule map_vcf:
     input:
         csv = "../output/test/{data}/{sample}/{sample}.csv",
+        #vcf = "../../3_simulation/vcf_annotation/{sample}.annotation.vcf.gz"
         vcf = sim_workflow("vcf_annotation/{sample}.annotation.vcf.gz")
     output:
         vcf = "../output/test/{data}/{sample}/{sample}.vcf.gz",
@@ -77,13 +97,13 @@ rule map:
 
 rule CV:
     input:
-        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
+        sum_file = sim_workflow("performanceEvaluation/data/CV_test/{data}.csv")
     output:
-        "../output/cv/CV_{data}/run.log"
+        "../output/cv_test/CV_{data}/run.log"
     params:
         label = "{data}",
-        dir = "../output/cv/CV_{data}",
-        train = "../../3_simulation/json_simulation/{data}/CV/"
+        dir = "../output/cv_test/CV_{data}",
+        train = "../../3_simulation/json_simulation/{data}/CV_test/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -c 10 -g -o '{params.dir}';
