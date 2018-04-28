@@ -97,13 +97,13 @@ rule map:
 
 rule CV:
     input:
-        sum_file = sim_workflow("performanceEvaluation/data/CV_test/{data}.csv")
+        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
-        "../output/cv_test/CV_{data}/run.log"
+        "../output/cv/CV_{data}/run.log"
     params:
         label = "{data}",
-        dir = "../output/cv_test/CV_{data}",
-        train = "../../3_simulation/json_simulation/{data}/CV_test/"
+        dir = "../output/cv/CV_{data}",
+        train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -c 10 -g -o '{params.dir}';
