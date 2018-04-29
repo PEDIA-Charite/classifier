@@ -59,7 +59,7 @@ rule test_unknown:
 rule map_pedia:
     input:
         csv = "../output/test/{data}/{sample}/{sample}.csv",
-        json = sim_workflow("json_simulation/real/test/{sample}.json")
+        json = sim_workflow("json_simulation/real/unknown_test/{sample}.json")
     output:
         json = "../output/test/{data}/{sample}/{sample}_pedia.json",
     params:
@@ -90,7 +90,7 @@ rule map:
         vcf = "../output/test/{data}/{sample}/{sample}.vcf.gz",
         json = "../output/test/{data}/{sample}/{sample}_pedia.json",
     output:
-        out = touch("../output/test/{data}/{sample}/{sample}.out")
+        out = touch("../output/test/{data}/{sample}/run.out")
     params:
         label = "{data}",
         dir = "../output/test/{data}/{sample}/"
