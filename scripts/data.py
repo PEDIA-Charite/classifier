@@ -64,7 +64,7 @@ class Data:
                 # filter the sample which has no the feature we assigned
                 if filter_field != None:
                     if int(row["label"]) == 1:
-                        if row[self.filter_dict[filter_field[0]]] == 'nan':
+                        if row[self.filter_dict[filter_field[0]]] == 'nan' or row[self.filter_dict[filter_field[0]]] == '0':
                             logger.debug("%s - %s has no %s score", case, row["gene_symbol"], self.filter_dict[filter_field[0]])
                             filter_cases.append(case)
 
