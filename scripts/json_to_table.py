@@ -96,9 +96,6 @@ def parse_json(input_dir, outputfile):
             hashedData[getKey(case,geneID)] = {"case": case, "gene_symbol": geneSymbol, "gene_id": geneID, "feature_score": featureScore, "cadd_phred_score": caddPhredScore, "combined_score":  combinedScore, "cadd_raw_score":  caddRawSscore, "gestalt_score":  gestaltScore, "boqa_score":  boqaScore, "pheno_score": phenoScore, "label": label}
         if not found and gene != "":
             logger.warning("Warning: Gene %s is not found in case %s", gene, case)
-            for geneID in geneIDs:
-                if getKey(case, geneID) in hashedData:
-                    del hashedData[getKey(case,geneID)]
 
     with open(outputfile, 'w') as csvfile:
         fieldnames = ["case", "gene_symbol", "gene_id", "feature_score", "cadd_phred_score", "combined_score", "cadd_raw_score", "gestalt_score", "boqa_score", "pheno_score", "label"]
