@@ -12,6 +12,12 @@ from sklearn import svm, datasets, ensemble
 from scipy import interp
 from itertools import cycle
 from sklearn.model_selection import KFold
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GroupKFold
+from sklearn.metrics import classification_report
+from sklearn.svm import SVC
+from shutil import copyfile
 
 
 # Setup logging
@@ -25,12 +31,21 @@ logger.addHandler(console_handle)
 NORMAL_MODE = 0
 SERVER_MODE = 1
 
-def classify(train_data, test_data, path, mode=NORMAL_MODE, filter_feature=None):
+def classify(train_data, test_data, path, param_fold, mode=NORMAL_MODE, filter_feature=None, cv_fold=None):
     """ SVM classification of all samples in the instance of Data against a given training
     data set that is also an instance of class Data """
 
+    # Set the parameters by cross-validation
+    #tuned_parameters = [{'kernel': ['rbf'], 'gamma': [1e-3, 1e-4],
+    #    'C': [0.1, 1], 'class_weight': ['balanced']},
+    #    {'kernel': ['linear'], 'C': [0.1, 1], 'class_weight': ['balanced']} ]
+    tuned_parameters = [{'kernel': ['linear'], 'C': [0.1, 1, 10, 100, 1000], 'class_weight': ['balanced']}]
+
+    #score = 'f1'
+    score = 'precision'
     X = []
     y = []
+    group = []
 
     for case in train_data:
         if filter_feature == None:
@@ -38,8 +53,9 @@ def classify(train_data, test_data, path, mode=NORMAL_MODE, filter_feature=None)
         else:
             for value in train_data[case][0]:
                 X.append(value[~np.in1d(range(len(value)), filter_feature)])
-
-        [y.append(value) for value in train_data[case][1]]
+        for value in train_data[case][1]:
+            y.append(value)
+            group.append(case)
 
     X = np.array(X)
     X = X.astype(float)
@@ -48,11 +64,38 @@ def classify(train_data, test_data, path, mode=NORMAL_MODE, filter_feature=None)
     X = normalizer.transform(X)
     y = np.array(y)
 
-    logger.info("Start training")
-    clf = svm.SVC(kernel='linear', C=1, probability=False, class_weight='balanced')
-    clf.fit(X, y)
-    logger.info("Feature weights %s", str(clf.coef_[0]))
+    if param_fold > 0:
+        
+        group = np.array(group)
+        gkf = list(GroupKFold(n_splits=param_fold).split(X, y, group))
+        #for train_index, test_index in gkf:
+        #    print("TRAIN:", y[train_index].tolist().count(1), "TEST:", y[test_index].tolist().count(1))
+        
+        logger.info("Tuning hyper-parameters")
+        
+        clf = GridSearchCV(SVC(), tuned_parameters, cv=gkf, scoring='%s' % score)
+        clf.fit(X, y)
+        
+        logger.info("Best parameters set found on development set: %s", str(clf.best_params_))
+        means = clf.cv_results_['mean_test_score']
+        stds = clf.cv_results_['std_test_score']
+        #print(clf.cv_results_.keys())
 
+        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+            logger.info("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+            
+        logger.info("Start training")
+        # the classifier is balanced because class 0 exceeds class 1 by far,
+        # (only one pathogenic mutation per case,but several hundred genes per case)
+        if clf.best_params_['kernel'] == 'linear':
+            clf = svm.SVC(kernel=clf.best_params_['kernel'], C=clf.best_params_['C'], probability=False, class_weight='balanced')
+        else:
+            clf = svm.SVC(kernel=clf.best_params_['kernel'], C=clf.best_params_['C'], gamma=clf.best_params_['gamma'], probability=False, class_weight='balanced')
+        #logger.info("Feature weights %s", str(clf.coef_[0]))
+    else:
+        clf = svm.SVC(kernel='linear', C=1, probability=False, class_weight='balanced')
+
+    clf.fit(X, y)
     logger.info("Start testing")
     pedia = {}
     for case in test_data:
@@ -88,6 +131,13 @@ def classify(train_data, test_data, path, mode=NORMAL_MODE, filter_feature=None)
                 writer.writeheader()
                 for index in range(len(score)):
                     writer.writerow({'gene_name': gene_name[index], 'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
+            if cv_fold != None:
+                cv_dir = path + "/" + str(cv_fold)
+                if not os.path.exists(cv_dir):
+                    os.mkdir(cv_dir)
+                copyfile(filename, cv_dir + "/" + case + ".csv")
+
+
         else:
             fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'label']
             writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
@@ -164,7 +214,7 @@ def classify_test(train, test, path, running_mode, filter_feature=None):
 
     return pedia
 
-def classify_cv(data, path, k_fold, running_mode, filter_feature=None):
+def classify_cv(data, path, k_fold, param_fold, running_mode, filter_feature=None):
     kf = KFold(n_splits=k_fold, shuffle=True)
     sample_names = np.array(list(data.keys()))
 
@@ -182,7 +232,8 @@ def classify_cv(data, path, k_fold, running_mode, filter_feature=None):
         set_default(train, default_value)
         set_default(test, default_value)
 
-        pedia.update(classify(train, test, path, running_mode, filter_feature))
+
+        pedia.update(classify(train, test, path, param_fold, running_mode, filter_feature, fold_count))
         fold_count += 1
 
     return pedia

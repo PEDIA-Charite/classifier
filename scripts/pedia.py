@@ -51,6 +51,7 @@ def main():
     parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
     parser.add_argument('-g', '--graph', action='store_true', help='Enable manhattan plot')
     parser.add_argument('-s', '--server', action='store_true', help='Enable server mode')
+    parser.add_argument('-p', '--param-tuning-fold', type=int, help='Enable parameter tuning mode')
     parser.add_argument('-f', '--filter_feature', help='Filter sample without specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
 
     args = parser.parse_args()
@@ -60,6 +61,7 @@ def main():
     train_file = output_path + "/train.csv"
     test_file = output_path + "/test.csv"
     test_path = None
+    param_fold = 0
 
     mode = TEST_MODE
     graph_mode = NO_GRAPH
@@ -117,6 +119,9 @@ def main():
     else:
         running_mode = NORMAL_MODE
 
+    if args.param_tuning_fold:
+        param_fold = int(args.param_tuning_fold)
+
     logger.debug("Command: %s", str(args))
     logger.info("Input directory: %s", train_path)
     logger.info("Output directory: %s", output_path)
@@ -127,6 +132,8 @@ def main():
     if running_mode == SERVER_MODE:
         running_mode_str = "Server"
     logger.info("Running mode: %s", running_mode_str)
+    param_str = 'Default parameter' if param_fold == 0 else 'Parameter tuning fold ' + str(param_fold)
+    logger.info("%s", param_str)
 
     # Parse json files from Training folder and Testing folder
     logger.info("Parse training json files from %s", train_path)
@@ -182,7 +189,7 @@ def main():
             if not os.path.exists(path):
                 os.makedirs(path)
             train = train_data.data
-            pedia = classify_cv(train, path, fold, running_mode, exclude_feature)
+            pedia = classify_cv(train, path, fold, param_fold, running_mode, exclude_feature)
 
             rank(pedia, train_label, path)
             if graph_mode == GRAPH:
