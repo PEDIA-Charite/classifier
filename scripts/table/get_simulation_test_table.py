@@ -7,7 +7,7 @@ output_dir = '../../latex/table/'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 outFile = open(output_dir + 'acc_simulation_result.tex', "w")
-input_dir =['../../output/simulation_test']
+input_dir =['../../output/publication_simulation_test']
 #input_dir =['../../output/cv', '../../output/cv_g']
 caption = ['all cases']
 label = ['table:simulation_test']
