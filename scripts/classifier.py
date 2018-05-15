@@ -205,12 +205,12 @@ def classify_RF(train_data, test_data, path):
     return pedia
 
 
-def classify_test(train, test, path, running_mode, filter_feature=None):
+def classify_test(train, test, path, param_fold, running_mode, filter_feature=None):
     default_value = get_feature_default(train)
     set_default(train, default_value)
     set_default(test, default_value)
 
-    pedia = classify(train, test, path, running_mode, filter_feature)
+    pedia = classify(train, test, path, param_fold, running_mode, filter_feature)
 
     return pedia
 

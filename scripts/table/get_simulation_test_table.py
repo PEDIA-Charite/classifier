@@ -6,18 +6,18 @@ import numpy as np
 output_dir = '../../latex/table/'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
-outFile = open(output_dir + 'acc_cv_result.tex', "w")
-input_dir =['../../output/cv']
+outFile = open(output_dir + 'acc_simulation_result.tex', "w")
+input_dir =['../../output/simulation_test']
 #input_dir =['../../output/cv', '../../output/cv_g']
-caption = ['all cases', 'the cases with gestalt in pathogenic mutation gene']
-label = ['table:cv', 'table:cv_g']
+caption = ['all cases']
+label = ['table:simulation_test']
 data_type = ["1KG", "ExAC", "IRAN"]
 
 #Output text
 for cv_idx, cv_dir in enumerate(input_dir):
     outFile.write("\\begin{center}\n")
     outFile.write("\\begin{table}[ht]\n")
-    outFile.write("\\caption{Result of 10-fold cross validation result on " + caption[cv_idx] + "}\\medskip\n")
+    outFile.write("\\caption{Result of simulation test on " + caption[cv_idx] + "}\\medskip\n")
     outFile.write("\\label{" + label[cv_idx] + "}\n")
     outFile.write("\\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \\hline\n")
     outFile.write("&\\multicolumn{3}{|c|}{1KG}&\\multicolumn{3}{|c|}{ExAC}&\\multicolumn{3}{|c|}{IRAN}\\\\ \\hline \n")
@@ -26,7 +26,7 @@ for cv_idx, cv_dir in enumerate(input_dir):
     total_pedia = []
     for name in data_type:
         counts = []
-        filename = cv_dir + "/CV_" + name + "/rank_" + name + ".csv"
+        filename = cv_dir + "/" + name + "/REP_0/rank_" + name + ".csv"
         with open(filename) as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
@@ -34,13 +34,13 @@ for cv_idx, cv_dir in enumerate(input_dir):
 
         total_count.append(counts)
         cv_pedia = []
-        for cv_idx in range(1):
+        for cv_idx in range(10):
             pedia_score = [[], [], [], []]
-            filename = cv_dir + "/CV_" + name + "/cv_" + str(cv_idx) + "/rank_gene_" + name + ".csv"
+            filename = cv_dir + "/" + name + "/REP_" + str(cv_idx) + "/rank_gene_" + name + ".csv"
             with open(filename) as csvfile:
                 reader = csv.reader(csvfile)
                 for row in reader:
-                    pedia_file = cv_dir + "/CV_" + name + "/cv_" + str(cv_idx) + "/" + row[0] + ".csv"
+                    pedia_file = cv_dir + "/" + name + "/REP_" + str(cv_idx) + "/" + row[0] + ".csv"
                     flag = 0
                     with open(pedia_file) as pedia_csv:
                         reader_2 = csv.reader(pedia_csv)

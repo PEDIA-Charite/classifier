@@ -6,19 +6,18 @@ import numpy as np
 output_dir = '../../latex/table/'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
-outFile = open(output_dir + 'acc_cv_result.tex', "w")
-input_dir =['../../output/cv']
-#input_dir =['../../output/cv', '../../output/cv_g']
-caption = ['all cases', 'the cases with gestalt in pathogenic mutation gene']
-label = ['table:cv', 'table:cv_g']
+outFile = open(output_dir + 'acc_test_result.tex', "w")
+input_dir =['../../output/real_test']
+caption = ['all cases']
+label = ['table:cv']
 data_type = ["1KG", "ExAC", "IRAN"]
 
 #Output text
 for cv_idx, cv_dir in enumerate(input_dir):
     outFile.write("\\begin{center}\n")
     outFile.write("\\begin{table}[ht]\n")
-    outFile.write("\\caption{Result of 10-fold cross validation result on " + caption[cv_idx] + "}\\medskip\n")
-    outFile.write("\\label{" + label[cv_idx] + "}\n")
+    outFile.write("\\caption{Result of testing on cases with real exome with " + caption[cv_idx] + "}\\medskip\n")
+    outFile.write("\\label{" + label[cv_idx] + "_test}\n")
     outFile.write("\\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \\hline\n")
     outFile.write("&\\multicolumn{3}{|c|}{1KG}&\\multicolumn{3}{|c|}{ExAC}&\\multicolumn{3}{|c|}{IRAN}\\\\ \\hline \n")
     outFile.write("Rank&Count&Cumu(\%)&pedia&Count&Cumu(\%)&pedia&Count&Cumu(\%)&pedia\\\\ \\hline \n")
@@ -26,7 +25,7 @@ for cv_idx, cv_dir in enumerate(input_dir):
     total_pedia = []
     for name in data_type:
         counts = []
-        filename = cv_dir + "/CV_" + name + "/rank_" + name + ".csv"
+        filename = cv_dir + "/" + name + "/rank_" + name + ".csv"
         with open(filename) as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
@@ -34,29 +33,28 @@ for cv_idx, cv_dir in enumerate(input_dir):
 
         total_count.append(counts)
         cv_pedia = []
-        for cv_idx in range(1):
-            pedia_score = [[], [], [], []]
-            filename = cv_dir + "/CV_" + name + "/cv_" + str(cv_idx) + "/rank_gene_" + name + ".csv"
-            with open(filename) as csvfile:
-                reader = csv.reader(csvfile)
-                for row in reader:
-                    pedia_file = cv_dir + "/CV_" + name + "/cv_" + str(cv_idx) + "/" + row[0] + ".csv"
-                    flag = 0
-                    with open(pedia_file) as pedia_csv:
-                        reader_2 = csv.reader(pedia_csv)
-                        for row_2 in reader_2:
-                            if flag == 1:
-                                if int(row_2[3]) == 1:
-                                    if int(row[1]) == 0:
-                                        pedia_score[0].append(float(row_2[2]))
-                                    elif int(row[1]) > 0 and int(row[1]) <= 9:
-                                        pedia_score[1].append(float(row_2[2]))
-                                    elif int(row[1]) > 9 and int(row[1]) <= 98:
-                                        pedia_score[2].append(float(row_2[2]))
-                                    else:
-                                        pedia_score[3].append(float(row_2[2]))
-                            flag = 1
-            cv_pedia.append([np.mean(np.array(value)) for value in pedia_score])
+        pedia_score = [[], [], [], []]
+        filename = cv_dir + "/" + name + "/rank_gene_" + name + ".csv"
+        with open(filename) as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                pedia_file = cv_dir + "/" + name + "/" + row[0] + ".csv"
+                flag = 0
+                with open(pedia_file) as pedia_csv:
+                    reader_2 = csv.reader(pedia_csv)
+                    for row_2 in reader_2:
+                        if flag == 1:
+                            if int(row_2[3]) == 1:
+                                if int(row[1]) == 0:
+                                    pedia_score[0].append(float(row_2[2]))
+                                elif int(row[1]) > 0 and int(row[1]) <= 9:
+                                    pedia_score[1].append(float(row_2[2]))
+                                elif int(row[1]) > 9 and int(row[1]) <= 98:
+                                    pedia_score[2].append(float(row_2[2]))
+                                else:
+                                    pedia_score[3].append(float(row_2[2]))
+                        flag = 1
+        cv_pedia.append([np.mean(np.array(value)) for value in pedia_score])
         cv_pedia = np.array(cv_pedia)
         total_pedia.append([np.mean(cv_pedia[:,i]) for i in range(4)])
 

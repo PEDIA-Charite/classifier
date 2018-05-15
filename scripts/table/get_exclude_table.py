@@ -19,7 +19,8 @@ rank_idx = ["1", "2-10", "11-99", "100+"]
 e_nums = [1, 2, 3, 4]
 e_idx = {0:'1', 5:'2', 15:'3', 25:'4'}
 print_idx = [4, 14, 24, 29]
-input_dirs = ['../../output/exclude/', '../../output/exclude_g/']
+input_dirs = ['../../output/exclude/']
+#input_dirs = ['../../output/exclude/', '../../output/exclude_g/']
 label = ['table:exclude_', 'table:exclude_g_']
 caption = ['using all cases on ', 'using the cases with gestalt score on ']
 for input_idx, input_dir in enumerate(input_dirs):

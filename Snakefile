@@ -4,13 +4,18 @@ subworkflow sim_workflow:
 	workdir: "../3_simulation"
 	snakefile: "../3_simulation/Snakefile"
 
+subworkflow pub_sim_workflow:
+	workdir: "../3_simulation/publication_simulation"
+	snakefile: "../3_simulation/publication_simulation/Snakefile"
+
 DATA_TYPE = ["1KG", "ExAC", "IRAN"]
 FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1_4",
            "2_3", "2_4", "3_4", "0_1_2", "0_1_3", "0_1_4", "0_2_3", "0_2_4", "0_3_4", "1_2_3", "1_2_4", "1_3_4", "2_3_4",
            "0_1_2_3", "0_2_3_4", "0_1_3_4", "0_1_2_4", "1_2_3_4"]
 
+RUN = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-data = expand("CV_{data}/run.log", data=DATA_TYPE),
+data = expand("CV_{data}/run.log", data=DATA_TYPE)
 
 
 classify_file = 'pedia.py'
@@ -23,7 +28,63 @@ rule all:
         expand("../output/loocv/LOOCV_{data}/run.log", data=DATA_TYPE),
         expand("../output/exclude/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
 
+#################################################################
+# Test the publication data set in Deep Gestalt paper 
+#################################################################
 
+rule publication_simulation_test:
+    input:
+        train = pub_sim_workflow("{background}_{run}_train.log"),
+        test = pub_sim_workflow("{background}_{run}_test.log")
+    output:
+        csv = "../output/publication_simulation_test/{background}/REP_{run}/run.log"
+    params:
+        label = "{background}",
+        dir = "../output/publication_simulation_test/{background}/REP_{run}",
+        train = "../../3_simulation/publication_simulation/REP_{run}/json_simulation/{background}/train/",
+        test = "../../3_simulation/publication_simulation/REP_{run}/json_simulation/{background}/CV/"
+    shell:
+        """
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}';
+        """
+
+rule publication_simulation_test_all:
+    input:
+        expand("../output/publication_simulation_test/{data}/REP_{rep}/run.log", data=DATA_TYPE, rep=RUN)
+    output:
+        touch("../output/publication_simulation_test/all.log")
+
+##########################################################################
+# Test the cases with real exome but we used the simulated exome instead of
+# real exome. We would like to compare the performace between using real 
+# exome and simulated one
+##########################################################################
+
+rule test_simulated:
+    input:
+        train = sim_workflow("performanceEvaluation/data/Real/train_{data}.csv"),
+        test = sim_workflow("performanceEvaluation/data/Real/test_simulated_{data}.csv")
+    output:
+        csv = "../output/real_simulated_test/{data}/run.log"
+    params:
+        label = "{data}",
+        dir = "../output/real_simulated_test/{data}/",
+        train = "../../3_simulation/json_simulation/real/train/{data}/",
+        test = "../../3_simulation/json_simulation/real/test_{data}/"
+    shell:
+        """
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}';
+        """
+
+rule test_simulated_all:
+    input:
+        expand("../output/real_simulated_test/{data}/run.log", data=DATA_TYPE)
+    output:
+        touch("../output/real_simulated_test/all.log")
+
+#########################################################################
+# Train the model with simulated cases and test the cases with real exome
+#########################################################################
 
 rule test:
     input:
@@ -34,12 +95,22 @@ rule test:
     params:
         label = "{data}",
         dir = "../output/real_test/{data}/",
-        train = "../../3_simulation/json_simulation/real/{data}/CV",
+        train = "../../3_simulation/json_simulation/real/train/{data}/",
         test = "../../3_simulation/json_simulation/real/test/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}';
         """
+
+rule test_all:
+    input:
+        expand("../output/real_test/{data}/run.log", data=DATA_TYPE)
+    output:
+        touch("../output/real_test/all.log")
+
+############################################################################
+# Test the case with unknown diagnosis
+############################################################################
 
 rule test_unknown:
     input:
@@ -95,6 +166,10 @@ rule map:
         label = "{data}",
         dir = "../output/test/{data}/{sample}/"
 
+############################################################################
+# Run k-fold cross-validation. Default k: 10
+############################################################################
+
 rule CV:
     input:
         sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
@@ -115,6 +190,13 @@ rule CV_all:
     output:
         touch("../output/cv/CV_all.log")
 
+############################################################################
+# Run 10 fold cross validation with different scores
+# We define the scores in FEATURE
+# We would like to compare the performace of using 
+# different scores.
+###########################################################################
+
 rule CV_exclude:
     input:
         sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
@@ -127,7 +209,7 @@ rule CV_exclude:
         train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} {params.train} {params.label} -c 10 -g -e {params.exclude_feature} -o {params.dir};
+        python {classify_file} {params.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir};
         """
 
 rule CV_exclude_all:
@@ -135,6 +217,10 @@ rule CV_exclude_all:
         expand("../output/exclude/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
     output:
         touch("../output/exclude/CV_exclude_all.log")
+
+###########################################################################
+# Perform LOOCV on disease causing gene
+###########################################################################
 
 rule LOOCV:
     input:
@@ -156,6 +242,10 @@ rule LOOCV_all:
     output:
         touch("../output/loocv/LOOCV_all.log")
 
+###########################################################################
+# Perform 10 fold CV on cases with gestalt support
+###########################################################################
+
 rule CV_g:
     input:
         sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
@@ -176,6 +266,10 @@ rule CV_all_g:
     output:
         touch("../output/cv_g/CV_all.log")
 
+###########################################################################
+# Perform 10 fold LOOCV on cases with gestalt support
+###########################################################################
+
 rule LOOCV_g:
     input:
         sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
@@ -195,6 +289,11 @@ rule LOOCV_all_g:
         expand("../output/loocv_g/LOOCV_{data}/run.log", data=DATA_TYPE)
     output:
         touch("../output/loocv_g/LOOCV_all.log")
+
+###########################################################################
+# Perform 10 fold CV on cases with gestalt support by using different
+# scores
+###########################################################################
 
 rule CV_exclude_g:
     input:

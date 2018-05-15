@@ -163,7 +163,7 @@ def main():
         test_data = Data()
         test_data.loadData(test_file, filter_feature)
         test = test_data.data
-        pedia = classify_test(train, test, output_path, running_mode, exclude_feature)
+        pedia = classify_test(train, test, output_path, param_fold, running_mode, exclude_feature)
 
         rank(pedia, train_label, output_path)
         if graph_mode == GRAPH:
