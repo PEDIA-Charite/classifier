@@ -32,7 +32,7 @@ if __name__ == '__main__':
             pedia.update({row['gene_id']:row['pedia_score']})
     file_content = json.load(open(filename))
     for gene_entry in file_content["geneList"]:
-        gene_id = gene_entry['gene_symbol']
+        gene_id = str(gene_entry['gene_id'])
         score = pedia[gene_id]
         gene_entry.update({'pedia_score':score})
 

@@ -6,13 +6,15 @@ import matplotlib
 matplotlib.use('pdf')
 from matplotlib import pyplot
 import math
+import json
 
 output_dir = '../../latex/table/'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 outFile = open(output_dir + 'pedia_cv_result.tex', "w")
 #Output text
-input_dir =['../../output/cv', '../../output/cv_g']
+input_dir =['../../output/cv']
+#input_dir =['../../output/cv', '../../output/cv_g']
 type_suffix = ['', '_g']
 caption = ['all cases in ', 'the cases with gestalt in ']
 data_type = ["1KG", "ExAC", "IRAN"]
@@ -46,7 +48,7 @@ for type_idx, type_dir in enumerate(input_dir):
         cv_p_std = []
         pedia_score = []
         pedia_p_score = []
-        for cv_idx in range(10):
+        for cv_idx in range(1):
             count = [0, 0, 0, 0]
             p_count = [0, 0, 0, 0]
             rank_score = [[], [], [], []]
@@ -62,33 +64,33 @@ for type_idx, type_dir in enumerate(input_dir):
                         reader_2 = csv.reader(pedia_csv)
                         for row_2 in reader_2:
                             if flag == 1:
-                                if int(row_2[2]) == 1:
-                                    pedia_p_score.append(float(row_2[1]))
+                                if int(row_2[3]) == 1:
+                                    pedia_p_score.append(float(row_2[2]))
                                     if rank == 0:
-                                        rank_p_score[0].append(float(row_2[1]))
+                                        rank_p_score[0].append(float(row_2[2]))
                                         p_count[0] += 1
                                     elif rank > 0 and rank < 10:
-                                        rank_p_score[1].append(float(row_2[1]))
+                                        rank_p_score[1].append(float(row_2[2]))
                                         p_count[1] += 1
                                     elif rank >= 10 and rank < 99:
-                                        rank_p_score[2].append(float(row_2[1]))
+                                        rank_p_score[2].append(float(row_2[2]))
                                         p_count[2] += 1
                                     else:
-                                        rank_p_score[3].append(float(row_2[1]))
+                                        rank_p_score[3].append(float(row_2[2]))
                                         p_count[3] += 1
                                 else:
-                                    pedia_score.append(float(row_2[1]))
+                                    pedia_score.append(float(row_2[2]))
                                     if rank == 0:
-                                        rank_score[0].append(float(row_2[1]))
+                                        rank_score[0].append(float(row_2[2]))
                                         count[0] += 1
                                     elif rank > 0 and rank < 10:
-                                        rank_score[1].append(float(row_2[1]))
+                                        rank_score[1].append(float(row_2[2]))
                                         count[1] += 1
                                     elif rank >= 10 and rank < 99:
-                                        rank_score[2].append(float(row_2[1]))
+                                        rank_score[2].append(float(row_2[2]))
                                         count[2] += 1
                                     else:
-                                        rank_score[3].append(float(row_2[1]))
+                                        rank_score[3].append(float(row_2[2]))
                                         count[3] += 1
                                 rank += 1
                             flag = 1
@@ -141,15 +143,17 @@ for type_idx, type_dir in enumerate(input_dir):
     outFile.write("\\end{center}\n")
 
 outFile.close()
-sample_filename = "../sample.csv"
+sample_filename = "../../output/cv/CV_1KG/train.csv"
 sample_dict = {}
-label = ['table:cv_poor_case', 'table:cv_poor_g_case']
+label = ['table:cv_poor_case']
+#label = ['table:cv_poor_case', 'table:cv_poor_g_case']
 with open(sample_filename) as csvfile:
     reader = csv.reader(csvfile)
     flag = 0
     for row in reader:
         if flag == 1:
-            sample_dict.update({row[0]: row[3:8]})
+            if int(row[-1]) == 1:
+                sample_dict.update({row[0]: row[3:10]})
         flag = 1
 caption = ['all cases', 'the cases with gestalt in pathogenic mutation gene']
 outFile = open(output_dir + '/pedia_cv_poor_sample.tex', "w")
@@ -163,26 +167,29 @@ for idx, input_type in enumerate(input_dir):
         reader = csv.reader(csvfile)
         for row in reader:
             pedia_file = input_type + "/CV_" + name + "/cv_" + str(cv_idx) + "/" + row[0] + ".csv"
+            json_data = json.load(open('../../../3_simulation/json_simulation/1KG/CV/' + row[0] + '.json'))
+            syndrome = json_data['selected_syndromes'][0]['syndrome_name']
             flag = 0
             rank = 1
             with open(pedia_file) as pedia_csv:
                 reader_2 = csv.reader(pedia_csv)
                 for row_2 in reader_2:
                     if flag == 1:
-                        if int(row_2[2]) == 1:
+                        if int(row_2[3]) == 1:
                             value = sample_dict[row[0]]
-                            if float(row_2[1]) < 0:
-                                pedia_score_0.append([row[0], str(round(float(row_2[1]), 2)), str(rank),value[0], value[1], value[2], value[3], value[4]])
-                            if float(row_2[1]) >= 0 and float(row_2[1]) < 1:
-                                pedia_score_1.append([row[0], str(round(float(row_2[1]), 2)), str(rank), value[0], value[1], value[2], value[3], value[4]])
+                            if float(row_2[2]) < 0:
+                                pedia_score_0.append([row[0], str(round(float(row_2[2]), 2)), str(rank), str(round(float(value[0]),1)), str(round(float(value[1]), 1)), str(round(float(value[4]), 1)), str(round(float(value[5]), 1)), str(round(float(value[6]), 1))])
+                            if float(row_2[2]) >= 0 and float(row_2[2]) < 1:
+                                pedia_score_1.append([row[0], str(round(float(row_2[2]), 2)), str(rank), str(round(float(value[0]),1)), str(round(float(value[1]), 1)), str(round(float(value[4]), 1)), str(round(float(value[5]), 1)), str(round(float(value[6]), 1))])
                         rank += 1
                     flag = 1
 
     outFile.write("\\begin{center}\n")
-    outFile.write("\\begin{table}[ht]\n")
-    outFile.write("\\caption{Cases which perform bad on " + caption[idx] + "}\\medskip\n")
+    #outFile.write("\\begin{longtable}[ht]\n")
+    outFile.write("\\begin{longtable}{|c|c|c|c|c|c|c|c|}\n")
+    outFile.write("\\caption{Cases with poor performance on " + caption[idx] + "}\\\\ \n")
+    outFile.write("\\hline \n")
     outFile.write("\\label{" + label[idx] + "}\n")
-    outFile.write("\\begin{tabular}{|c|c|c|c|c|c|c|c|} \\hline\n")
     outFile.write("Case&Pedia&Rank&FM&CADD&Gestalt&Boqa&PHENO\\\\ \\hline \n")
     outFile.write("\\multicolumn{8}{|c|}{Pedia under 0}\\\\ \\hline \n")
     for pedia in pedia_score_0:
@@ -190,7 +197,7 @@ for idx, input_type in enumerate(input_dir):
     outFile.write("\\multicolumn{8}{|c|}{Pedia between 0 and 1}\\\\ \\hline \n")
     for pedia in pedia_score_1:
         outFile.write("&".join(pedia) + "\\\\ \\hline \n")
-    outFile.write("\\end{tabular}\n")
-    outFile.write("\\end{table}\n")
+    #outFile.write("\\end{tabular}\n")
+    outFile.write("\\end{longtable}\n")
     outFile.write("\\end{center}\n")
 outFile.close()
