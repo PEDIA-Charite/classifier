@@ -216,10 +216,10 @@ def main():
         for ite in range(config_data['cv_rep']):
             logger.info("Start CV repetition %d", ite+1)
             path = output_path + "/cv_" + str(ite)
-            #if not os.path.exists(path):
-            #    os.makedirs(path)
-            #train = train_data.data
-            #pedia = classify_cv_tuning_test(train, path, config_data)
+            if not os.path.exists(path):
+                os.makedirs(path)
+            train = train_data.data
+            pedia = classify_cv_tuning_test(train, path, config_data)
 
             rank_tuning(train_label, path, config_data)
             if graph_mode == GRAPH:
