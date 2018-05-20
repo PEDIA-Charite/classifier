@@ -141,7 +141,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, param_g=Non
     return pedia
 
 
-def param_tuning(X, y, group, config_data, path):
+def param_tuning(X, y, group, config_data):
 
     param_fold = config_data['param_fold']
     
