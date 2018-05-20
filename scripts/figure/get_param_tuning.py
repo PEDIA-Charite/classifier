@@ -1,0 +1,211 @@
+import csv
+import sys
+import os
+import numpy as np
+import matplotlib
+import math
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+def heatmap(data, row_labels, col_labels, ax=None,
+            cbar_kw={}, cbarlabel="", **kwargs):
+    """
+    Create a heatmap from a numpy array and two lists of labels.
+
+    Arguments:
+        data       : A 2D numpy array of shape (N,M)
+        row_labels : A list or array of length N with the labels
+                     for the rows
+        col_labels : A list or array of length M with the labels
+                     for the columns
+    Optional arguments:
+        ax         : A matplotlib.axes.Axes instance to which the heatmap
+                     is plotted. If not provided, use current axes or
+                     create a new one.
+        cbar_kw    : A dictionary with arguments to
+                     :meth:`matplotlib.Figure.colorbar`.
+        cbarlabel  : The label for the colorbar
+    All other arguments are directly passed on to the imshow call.
+    """
+
+    if not ax:
+        ax = plt.gca()
+
+    # Plot the heatmap
+    im = ax.imshow(data, **kwargs)
+
+    # Create colorbar
+    cbar = ax.figure.colorbar(im, ax=ax, **cbar_kw)
+    cbar.ax.set_ylabel(cbarlabel, rotation=-90, va="bottom")
+
+    # We want to show all ticks...
+    ax.set_xticks(np.arange(data.shape[1]))
+    ax.set_yticks(np.arange(data.shape[0]))
+    # ... and label them with the respective list entries.
+    ax.set_xticklabels(col_labels)
+    ax.set_yticklabels(row_labels)
+
+    # Let the horizontal axes labeling appear on top.
+    ax.tick_params(top=True, bottom=False,
+                   labeltop=True, labelbottom=False)
+
+    # Rotate the tick labels and set their alignment.
+    plt.setp(ax.get_xticklabels(), rotation=-30, ha="right",
+             rotation_mode="anchor")
+
+    # Turn spines off and create white grid.
+    for edge, spine in ax.spines.items():
+        spine.set_visible(False)
+
+    ax.set_xticks(np.arange(data.shape[1]+1)-.5, minor=True)
+    ax.set_yticks(np.arange(data.shape[0]+1)-.5, minor=True)
+    ax.grid(which="minor", color="w", linestyle='-', linewidth=3)
+    ax.tick_params(which="minor", bottom=False, left=False)
+
+    return im, cbar
+
+
+def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
+                     textcolors=["black", "white"],
+                     threshold=None, **textkw):
+    """
+    A function to annotate a heatmap.
+
+    Arguments:
+        im         : The AxesImage to be labeled.
+    Optional arguments:
+        data       : Data used to annotate. If None, the image's data is used.
+        valfmt     : The format of the annotations inside the heatmap.
+                     This should either use the string format method, e.g.
+                     "$ {x:.2f}", or be a :class:`matplotlib.ticker.Formatter`.
+        textcolors : A list or array of two color specifications. The first is
+                     used for values below a threshold, the second for those
+                     above.
+        threshold  : Value in data units according to which the colors from
+                     textcolors are applied. If None (the default) uses the
+                     middle of the colormap as separation.
+
+    Further arguments are passed on to the created text labels.
+    """
+
+    if not isinstance(data, (list, np.ndarray)):
+        data = im.get_array()
+
+    # Normalize the threshold to the images color range.
+    if threshold is not None:
+        threshold = im.norm(threshold)
+    else:
+        threshold = im.norm(data.max())/2.
+
+    # Set default alignment to center, but allow it to be
+    # overwritten by textkw.
+    kw = dict(horizontalalignment="center",
+              verticalalignment="center")
+    kw.update(textkw)
+
+    # Get the formatter in case a string is supplied
+    if isinstance(valfmt, str):
+        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
+
+    # Loop over the data and create a `Text` for each "pixel".
+    # Change the text's color depending on the data.
+    texts = []
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            kw.update(color=textcolors[im.norm(data[i, j]) > threshold])
+            text = im.axes.text(j, i, valfmt(data[i, j], None), **kw)
+            texts.append(text)
+
+    return texts
+
+output_dir = '../../latex/figures/'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+#input_dir =['../../output/testing_folder/cv_param_rbf_linear_tuning_loss']
+input_dir =['../../output/cv_param_test_rbf_sampler_1KG']
+#input_dir =['../../output/cv', '../../output/cv_g']
+caption = ['all cases']
+data_type = ["1KG"]
+repetition = 1
+PARAM_C = [pow(2,i) for i in range(-3,12)]
+PARAM_G = [pow(2,i) for i in range(-8,3)]
+tuning_set = []
+for g in PARAM_G:
+    for c in PARAM_C:
+        tuning_set.append([g, c])
+len_c = len(PARAM_C)
+len_g = len(PARAM_G)
+top_1_data = []
+top_10_data = []
+print(len_c)
+print(len_g)
+print(len(tuning_set))
+#Output text
+for cv_idx, cv_dir in enumerate(input_dir):
+    for name in data_type:
+        total_rep = []
+        for c, c_value in enumerate(tuning_set):
+            tmp = 0
+            total_top1 = []
+            total_top10 = []
+            for idx in range(repetition):
+                filename = cv_dir + '/cv_' + str(idx) + '/param_' + str(c) + '/rank.csv'
+                with open(filename, 'r') as csvfile:
+                    reader = csv.reader(csvfile)
+                    count = 0
+                    rank = 0
+                    for row in reader:
+                        count += int(row[1])
+                        if rank == 0:
+                            total_top1.append(count)
+                        elif rank == 9:
+                            total_top10.append(count)
+                        rank += 1
+            total_rep.append([[i/count for i in total_top1], [i/count for i in total_top10]])
+        print(len(total_rep))
+        avg1 = [sum(x[0])/repetition for x in total_rep]
+        avg10 = [sum(x[1])/repetition for x in total_rep]
+        for i in range(len_g):
+            g_value1 = []
+            g_value10 = []
+            for j in range(len_c):
+                g_value1.append(avg1[i*len_c+j])
+                g_value10.append(avg10[i*len_c+j])
+            top_1_data.append(g_value1)
+            top_10_data.append(g_value10)
+
+
+        #print(avg1)
+        #print(avg10)
+        print(top_1_data)
+        print(top_10_data)
+        fig, ax = plt.subplots(figsize=(24, 18)) 
+        im, cbar = heatmap(np.array(top_1_data), PARAM_G, PARAM_C, ax=ax,
+                cmap="YlGn", cbarlabel="Top 1 accuracy")
+        texts = annotate_heatmap(im, valfmt="{x:.3f}", size=10)
+    
+        filename = "rank_1KG_param_C_G_top1.png"
+        plt.savefig(filename)
+        plt.close()
+        fig, ax = plt.subplots(figsize=(24, 18)) 
+        im, cbar = heatmap(np.array(top_10_data), PARAM_G, PARAM_C, ax=ax,
+                cmap="YlGn", cbarlabel="Top 10 accuracy")
+        texts = annotate_heatmap(im, valfmt="{x:.3f}", size=10)
+    
+        filename = "rank_1KG_param_C_G_top10.png"
+        plt.savefig(filename)
+        plt.close()
+        #lab = 'top1'
+        #lab2 = 'top10'
+        #col = 'red'
+        #col2 = 'blue' 
+        #plt.xticks(PARAM_C)
+        #plt.yticks(np.arange(0, 1, 0.01))
+        #plt.plot(np.array(PARAM_C), np.array(avg1), color=col, alpha=0.6, label=lab, linewidth=3)
+        #plt.plot(np.array(PARAM_C), np.array(avg10), color='blue', alpha=0.6, label=lab2, linewidth=3)
+        #plt.grid(axis='y', linestyle='-')
+
+
+        #plt.xlabel('Parameter C', fontsize=30)
+        #plt.ylabel('Rank', fontsize=30)
+        #plt.legend(loc='upper left', fontsize=30)
+

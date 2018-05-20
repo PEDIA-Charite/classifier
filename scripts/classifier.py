@@ -40,7 +40,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, param_g=Non
     # Set the parameters by cross-validation
 
     param_fold = config_data['param_fold']
-    filter_feature = config_data['filter_feature']
+    filter_feature = config_data['exclude_feature']
     mode = config_data['running_mode']
 
     X = []
