@@ -72,13 +72,14 @@ for cv_idx, cv_dir in enumerate(input_dir):
         lab = 'simulated'
         lab2 = 'real'
         col = 'red'
+        col2 = 'blue' 
         plt.figure(figsize=(18, 12))
         plt.xticks(np.array(range(1, len(case_list)+1)), case_list)
         #plt.plot(range(1, len(case_list)+1), cv_rank[0:len(case_list)], color=col, alpha=0.6, label=lab, linewidth=3)
         #plt.scatter([1, 10, 100], [combined_performance[0], combined_performance[9], combined_performance[99]], color=col, alpha=0.6, marker='o', s=50)
         plt.yticks(np.arange(0, 200, 5))
-        plt.plot(np.array(range(1, len(case_list)+1)), np.array(cv_rank), color=col, alpha=0.6, label=lab, linewidth=3)
-        plt.plot(np.array(range(1, len(case_list)+1)), np.array(real_rank), color='blue', alpha=0.6, label=lab2, linewidth=3)
+        plt.bar(np.array(range(1, len(case_list)+1)), np.array(cv_rank), color=col, alpha=0.6, label=lab, linewidth=3)
+        plt.bar(np.array(range(1, len(case_list)+1)), np.array(real_rank), color='blue', alpha=0.6, label=lab2, linewidth=3)
         plt.grid(axis='y', linestyle='-')
 
         plt.xlabel('Case ID', fontsize=30)

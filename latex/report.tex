@@ -24,6 +24,7 @@
 
 \maketitle
 
+\begin{comment}
 \section{Data preprocessing}
 We have 348 cases in total. 329 of them are simulated, and 19 are real
 cases. There are 9 cases are excluded in preprocessing, because we can
@@ -38,9 +39,11 @@ between using 339 cases and 273 cases.
 
 \input{table/problem_sample.tex}
 \input{table/sample_detail_no_g}
+\end{comment}
 \section{Results}
 \subsection{Comparision the results between with or without Gestalt
 score in pathogenic gene}
+\begin{comment}
 Table \ref{table:cv} and Table \ref{table:cv_g} show the result of
 10-fold cross validation between using all cases and only using the
 cases with gestalt score in pathogenic mutation gene.
@@ -48,10 +51,30 @@ In Table \ref{table:cv_sample_no_g}, it show the result of 66 cases
 without gestalt score in pathogenic mutation gene.
 The distribution of pedia score are shown on Table \ref{table:pedia_cv}
 and Table \ref{table:pedia_cv_g}.
+\end{comment}
 \input{table/acc_cv_result.tex}
+\input{table/acc_test_result.tex}
+\begin{figure}[ht]
+  \begin{center}
+    \graphicspath{{./}}
+    \begin{tabular}{cc}
+      \includegraphics[width=9 cm, height= 6 cm]{simulated_real_1KG.png}&
+      \includegraphics[width=9 cm, height= 6 cm]{simulated_real_ExAC.png}\\
+      \multicolumn{2}{c}{\includegraphics[width=9 cm, height= 6
+      cm]{simulated_real_IRAN.png}}\\
+    \end{tabular}
+  \caption{Performance comparision between using real exome and
+  simulated exome}
+  \end{center}
+\end{figure}
+\input{table/acc_simulation_result.tex}
+\input{table/pedia_cv_result.tex}
+\input{table/pedia_cv_poor_sample.tex}
+\input{table/acc_exclude_result.tex}
+
+\begin{comment}
 \input{table/cv_sample_without_g.tex}
 
-\input{table/pedia_cv_result.tex}
 
 \subsection{Leave one out cross validation}
 The results of LOOCV are in Table \ref{table:loocv} and Table
@@ -138,4 +161,5 @@ using the cases with gestalt are 4.9, 12.7, 6.86, 1.00 and 1.56.
 
 \vfill
 
+\end{comment}
 \end{document}

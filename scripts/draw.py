@@ -143,6 +143,9 @@ def manhattan(pedia, path, ID='all'):
             plt.ylim(y_min, y_max+(y_max/10)) #ymin-(ymax/30)
             plt.xlim(0, ticks[-1]+(chr_sizes[-1]/2)+10**6)
             plt.title(ID)
+            path = os.path.join(path, 'figures')
+            if not os.path.exists(path):
+                os.makedirs(path)
             filename = path + "/manhattan_" + ID + ".png"
             plt.savefig(filename)
             plt.close()
@@ -259,6 +262,9 @@ def manhattan_all(pedia, path):
     plt.ylim(y_min, y_max+(y_max/10)) #ymin-(ymax/30)
     plt.xlim(0, ticks[-1]+(chr_sizes[-1]/2)+10**6)
     plt.title('all case')
+    path = os.path.join(path, 'figures')
+    if not os.path.exists(path):
+        os.makedirs(path)
     filename = path + "/manhattan_all.png"
     plt.legend(loc='upper left', prop={'size':6}, bbox_to_anchor=(1,1))
     plt.savefig(filename)
@@ -302,6 +308,9 @@ def draw_rank(col, lab, path):
     plt.ylabel('Sensitivity', fontsize=30)
     plt.title('Sensitivity-rank-cut-off-correlation', fontsize=30)
     plt.legend(loc='lower right', fontsize=30)
+    path = os.path.join(path, 'figures')
+    if not os.path.exists(path):
+        os.makedirs(path)
     filename = path + "/rank_" + lab + ".png"
     plt.savefig(filename)
     plt.close()

@@ -16,7 +16,7 @@ data_type = ["1KG", "ExAC", "IRAN"]
 for cv_idx, cv_dir in enumerate(input_dir):
     outFile.write("\\begin{center}\n")
     outFile.write("\\begin{table}[ht]\n")
-    outFile.write("\\caption{Result of testing on cases with real exome with " + caption[cv_idx] + "}\\medskip\n")
+    outFile.write("\\caption{Result of testing on cases with real exome" + "}\\medskip\n")
     outFile.write("\\label{" + label[cv_idx] + "_test}\n")
     outFile.write("\\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \\hline\n")
     outFile.write("&\\multicolumn{3}{|c|}{1KG}&\\multicolumn{3}{|c|}{ExAC}&\\multicolumn{3}{|c|}{IRAN}\\\\ \\hline \n")
