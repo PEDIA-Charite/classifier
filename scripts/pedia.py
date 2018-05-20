@@ -17,7 +17,6 @@ from json_to_table import parse_json
 from json_to_table import parse_json_stdin
 from rank import *
 from version import __version__
-import config
 from constants import *
 
 logger = logging.getLogger(__name__)
