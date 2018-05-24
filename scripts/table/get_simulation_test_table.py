@@ -2,6 +2,7 @@ import csv
 import sys
 import os
 import numpy as np
+from statistics import mean
 
 output_dir = '../../latex/table/'
 if not os.path.exists(output_dir):
@@ -25,14 +26,17 @@ for cv_idx, cv_dir in enumerate(input_dir):
     total_count = []
     total_pedia = []
     for name in data_type:
-        counts = []
-        filename = cv_dir + "/" + name + "/REP_0/rank_" + name + ".csv"
-        with open(filename) as csvfile:
-            reader = csv.reader(csvfile)
-            for row in reader:
-                counts.append(float(row[1]))
+        cv_count = []
+        for i in range(10):
+            counts = []
+            filename = cv_dir + "/" + name + "/REP_" + str(i) + "/rank_" + name + ".csv"
+            with open(filename) as csvfile:
+                reader = csv.reader(csvfile)
+                for row in reader:
+                    counts.append(float(row[1]))
+            cv_count.append(counts)
 
-        total_count.append(counts)
+        total_count.append([*map(mean, zip(*cv_count))])
         cv_pedia = []
         for cv_idx in range(10):
             pedia_score = [[], [], [], []]
@@ -58,7 +62,7 @@ for cv_idx, cv_dir in enumerate(input_dir):
                             flag = 1
             cv_pedia.append([np.mean(np.array(value)) for value in pedia_score])
         cv_pedia = np.array(cv_pedia)
-        total_pedia.append([np.mean(cv_pedia[:,i]) for i in range(4)])
+        total_pedia.append([np.nanmean(cv_pedia[:,i]) for i in range(4)])
 
     total_rank = []
     total_list = []

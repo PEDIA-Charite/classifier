@@ -32,7 +32,7 @@ formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
 console_handle.setFormatter(formatter)
 logger.addHandler(console_handle)
 
-def classify(train_data, test_data, path, config_data, cv_fold=None, param_g=None, param_c=None):
+def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1, param_g=None, param_c=None):
     #    param_fold, mode=NORMAL_MODE, filter_feature=None, cv_fold=None, tuning=None):
     """ SVM classification of all samples in the instance of Data against a given training
     data set that is also an instance of class Data """
@@ -72,16 +72,16 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, param_g=Non
     # Tuning parameter
     if param_fold > 0:
         group = np.array(group)
-        best_param = param_tuning(X, y, group, config_data)
+        best_param = param_tuning(X, y, group, config_data, rand_num)
         param_g = best_param[0] 
         param_c = best_param[1] 
             
     logger.info("Start training")
     logger.info("RBF sampler with gamma: %f", param_g)
     logger.info("Linear SVM with C: %f", param_c)
-    rbf_feature = RBFSampler(gamma=param_g, random_state=1)
+    rbf_feature = RBFSampler(gamma=param_g, random_state=rand_num)
     X_features = rbf_feature.fit_transform(X)
-    clf = svm.LinearSVC(C=param_c, class_weight='balanced', loss='hinge')
+    clf = svm.LinearSVC(C=param_c, class_weight='balanced', loss='hinge', random_state=rand_num)
     clf.fit(X_features, y)
     logger.debug("Feature weights %s", str(clf.coef_[0]))
     
@@ -141,7 +141,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, param_g=Non
     return pedia
 
 
-def param_tuning(X, y, group, config_data):
+def param_tuning(X, y, group, config_data, rand_num):
 
     param_fold = config_data['param_fold']
     
@@ -169,7 +169,7 @@ def param_tuning(X, y, group, config_data):
             # Train classifier 
             rbf_feature = RBFSampler(gamma=param[0], random_state=1)
             X_features = rbf_feature.fit_transform(X_train)
-            clf = svm.LinearSVC(C=param[1], class_weight='balanced',loss='hinge')
+            clf = svm.LinearSVC(C=param[1], class_weight='balanced',loss='hinge', random_state=rand_num)
             clf.fit(X_features, y_train)
             fold_count += 1
             top_count = 0
@@ -227,9 +227,9 @@ def classify_test(train, test, path, config_data):
 
     return pedia
 
-def classify_cv(data, path, config_data):
+def classify_cv(data, path, config_data, rand_num):
 
-    kf = KFold(n_splits=config_data['cv_fold'], shuffle=True)
+    kf = KFold(n_splits=config_data['cv_fold'], shuffle=True, random_state=rand_num)
     sample_names = np.array(list(data.keys()))
 
     fold_count = 1
@@ -248,7 +248,7 @@ def classify_cv(data, path, config_data):
         default_value = get_feature_default(train)
         set_default(train, default_value)
         set_default(test, default_value)
-        param_sets.append([train, test, path, config_data, fold_count])
+        param_sets.append([train, test, path, config_data, fold_count, rand_num])
         fold_count += 1
     
     results = [pool.apply_async(classify, args=(p)) for p in param_sets]
@@ -300,7 +300,7 @@ def classify_cv_tuning_test(data, path, config_data):
 
     return pedia
 
-def classify_loocv(data, path, running_mode, filter_feature=None):
+def classify_loocv(data, path, config_data, rand_num):
     sample_names = np.array(list(data.keys()))
     genes = []
     for name in sample_names:
@@ -312,6 +312,8 @@ def classify_loocv(data, path, running_mode, filter_feature=None):
     fold_count = 1
     pedia = {}
 
+    pool = mp.Pool(processes = config_data['cv_cores'])
+    param_sets = []
     csvfile = open(path + "/loocv_group.csv", 'w')
     writer = csv.writer(csvfile)
     for train_idx, test_idx in logo.split(sample_names, groups=genes):
@@ -326,10 +328,13 @@ def classify_loocv(data, path, running_mode, filter_feature=None):
         set_default(train, default_value)
         set_default(test, default_value)
 
-        pedia.update(classify(train, test, path, running_mode, filter_feature))
+        param_sets.append([train, test, path, config_data, fold_count, rand_num])
         fold_count += 1
 
         writer.writerow([np.array(genes)[test_idx][0], test_keys.tolist()])
+    results = [pool.apply_async(classify, args=(p)) for p in param_sets]
+    for result in results:
+        pedia.update(result.get())
     return pedia
 
 def get_feature_default(data):

@@ -34,7 +34,7 @@ for cv_idx, cv_dir in enumerate(input_dir):
 
         total_count.append(counts)
         cv_pedia = []
-        for cv_idx in range(1):
+        for cv_idx in range(2):
             pedia_score = [[], [], [], []]
             filename = cv_dir + "/CV_" + name + "/cv_" + str(cv_idx) + "/rank_gene_" + name + ".csv"
             with open(filename) as csvfile:

@@ -204,14 +204,16 @@ def main():
             draw_rank('red', train_label, output_path)
 
     elif mode == LOOCV_MODE:
-        train = train_data.data
-        pedia = classify_loocv(train, output_path, running_mode, exclude_feature)
+        for ite in range(config_data['cv_rep']):
+            train = train_data.data
+            pedia = classify_loocv(train, output_path, config_data, ite+1)
 
-        rank(pedia, train_label, output_path)
-        if graph_mode == GRAPH:
-            for case in pedia:
-                manhattan(pedia, output_path, case)
-            draw_rank('red', train_label, output_path)
+            rank(pedia, train_label, output_path)
+            if graph_mode == GRAPH:
+                for case in pedia:
+                    manhattan(pedia, output_path, case)
+                draw_rank('red', train_label, output_path)
+        rank_all_cv(train_label, output_path, config_data['cv_rep'])
     elif mode == PARAM_TEST_MODE:
         for ite in range(config_data['cv_rep']):
             logger.info("Start CV repetition %d", ite+1)
@@ -235,7 +237,7 @@ def main():
             if not os.path.exists(path):
                 os.makedirs(path)
             train = train_data.data
-            pedia = classify_cv(train, path, config_data)
+            pedia = classify_cv(train, path, config_data, ite+1)
 
             rank(pedia, train_label, path)
             if graph_mode == GRAPH:
