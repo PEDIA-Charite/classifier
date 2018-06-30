@@ -47,14 +47,18 @@ def manhattan(pedia, path, ID='all'):
         names = []
         names_x = []
         names_y = []
+        np_names = []
+        np_names_x = []
+        np_names_y = []
         if case == ID or ID == 'all':
             smpl_case = case
             score = np.array(pedia[case][0])
             pathogenicity = np.array(pedia[case][1])
             gene = np.array(pedia[case][3])
             length = len(score)
-
+            rank = 0
             for index in range(length):
+                rank += 1
                 gene_symbol = gene[index]
                 patho = pathogenicity[index]
                 sc = score[index]
@@ -85,6 +89,17 @@ def manhattan(pedia, path, ID='all'):
                         else:
                             sanos.append(sc)
                             s_pos.append(pos)
+                        if rank <= 10:
+                            if gene_symbol in np_names:
+                                for i in range(len(np_names)):
+                                    if np_names[i] == gene_symbol:
+                                        if np_names_y[i] < sc:
+                                            np_names_y[i] = sc
+                            else:
+                                np_names.append(gene_symbol)
+                                np_names_x.append(pos)
+                                np_names_y.append(sc)
+
 
                     if patho == 1:
                         pathos.append(sc)
@@ -100,13 +115,15 @@ def manhattan(pedia, path, ID='all'):
                             names_y.append(sc)
 
             plt.figure(figsize=(32, 16))
-            plt.scatter(s_pos, sanos, color='#70ACC0', alpha=0.6, marker='o', s=200, label=('neutrals'))
-            plt.scatter(s_pos2, sanos2, color='#008B8B', alpha=0.6, marker='o', s=200, label=('neutrals'))
-            plt.scatter(p_pos, pathos, color='red', marker='o', s=200, label='pathogenic')
+            plt.scatter(s_pos, sanos, color='#70ACC0', alpha=0.6, marker='o', s=160, label=('neutrals'))
+            plt.scatter(s_pos2, sanos2, color='#008B8B', alpha=0.6, marker='o', s=160, label=('neutrals'))
+            plt.scatter(p_pos, pathos, color='red', marker='o', s=160, label='pathogenic')
             plt.axhline(y=0, linestyle='dashed', linewidth=1)
 
             for i in range(len(names)):
-                plt.annotate(names[i], xy = (names_x[i], names_y[i]), xytext = (names_x[i], names_y[i]), fontsize=50, color='#AA1C7D')
+                plt.annotate(names[i], xy = (names_x[i], names_y[i]), xytext = (names_x[i], names_y[i]), fontsize=36, color='#AA1C7D')
+            for i in range(len(np_names)):
+                plt.annotate(np_names[i], xy = (np_names_x[i], np_names_y[i]), xytext = (np_names_x[i], np_names_y[i]), fontsize=36, color='#AA1C7D')
             plt.xlabel('chromosomal position', fontsize=28)
 
             ticks = []
@@ -116,7 +133,7 @@ def manhattan(pedia, path, ID='all'):
                 ticks.append(tick)
                 tick += (i / 2) + 10 ** 6
             plt.xticks(ticks)
-            plt.ylabel('pedia score', fontsize=38)
+            plt.ylabel('PEDIA score', fontsize=38)
             plt.legend(loc='center left', prop={'size':23}, bbox_to_anchor=(1,0.5))
             frame1 = plt.gca()
             chr_names = []
@@ -236,7 +253,7 @@ def manhattan_all(pedia, path):
         ticks.append(tick)
         tick += (i / 2) + 10 ** 6
     plt.xticks(ticks)
-    plt.ylabel('pedia score', fontsize=38)
+    plt.ylabel('PEDIA score', fontsize=38)
     frame1 = plt.gca()
     chr_names = []
 
@@ -266,7 +283,7 @@ def manhattan_all(pedia, path):
     if not os.path.exists(path):
         os.makedirs(path)
     filename = path + "/manhattan_all.png"
-    plt.legend(loc='upper left', prop={'size':6}, bbox_to_anchor=(1,1))
+    plt.legend(loc='center left', prop={'size':23}, bbox_to_anchor=(1,0.5))
     plt.savefig(filename)
     plt.close()
 

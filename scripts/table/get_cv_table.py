@@ -19,9 +19,9 @@ for cv_idx, cv_dir in enumerate(input_dir):
     outFile.write("\\begin{table}[ht]\n")
     outFile.write("\\caption{Result of 10-fold cross validation result on " + caption[cv_idx] + "}\\medskip\n")
     outFile.write("\\label{" + label[cv_idx] + "}\n")
-    outFile.write("\\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|} \\hline\n")
-    outFile.write("&\\multicolumn{3}{|c|}{1KG}&\\multicolumn{3}{|c|}{ExAC}&\\multicolumn{3}{|c|}{IRAN}\\\\ \\hline \n")
-    outFile.write("Rank&Count&Cumu(\%)&pedia&Count&Cumu(\%)&pedia&Count&Cumu(\%)&pedia\\\\ \\hline \n")
+    outFile.write("\\begin{tabular}{|c|c|c|c|c|c|c|} \\hline\n")
+    outFile.write("&\\multicolumn{2}{|c|}{1KG}&\\multicolumn{2}{|c|}{ExAC}&\\multicolumn{2}{|c|}{IRAN}\\\\ \\hline \n")
+    outFile.write("Rank&Acc(\%)&Std&Acc(\%)&Std&Acc(\%)&Std\\\\ \\hline \n")
     total_count = []
     total_pedia = []
     for name in data_type:
@@ -34,7 +34,7 @@ for cv_idx, cv_dir in enumerate(input_dir):
 
         total_count.append(counts)
         cv_pedia = []
-        for cv_idx in range(2):
+        for cv_idx in range(7):
             pedia_score = [[], [], [], []]
             filename = cv_dir + "/CV_" + name + "/cv_" + str(cv_idx) + "/rank_gene_" + name + ".csv"
             with open(filename) as csvfile:
@@ -71,11 +71,11 @@ for cv_idx, cv_dir in enumerate(input_dir):
         perc.append([round(total_count[index][0]/total*100, 2), round(sum(total_count[index][0:10])/total*100, 2), round(sum(total_count[index][0:99])/total*100, 2), round(sum(total_count[index][0:100])/total*100, 2)])
         avg_pedia.append([round(value, 2) for value in total_pedia[index]])
 
-    rank_idx = ["1", "2-10", "11-99", "100+"]
-    for index in range(4):
-        outFile.write(rank_idx[index] + "&" + str(total_rank[0][index]) + "&" + str(perc[0][index]) + "&" + str(avg_pedia[0][index]) + "&" + str(total_rank[1][index]) + "&" + str(perc[1][index]) + "&" + str(avg_pedia[1][index]) + "&" + str(total_rank[2][index]) + "&" + str(perc[2][index]) + "&" + str(avg_pedia[2][index]) + "\\\\ \\hline \n")
+    rank_idx = ["Top 1", "Top 10"]
+    for index in range(2):
+        outFile.write(rank_idx[index] + "&" + str(perc[0][index]) + "&" + str(avg_pedia[0][index]) + "&" + str(perc[1][index]) + "&" + str(avg_pedia[1][index]) + "&" + str(perc[2][index]) + "&" + str(avg_pedia[2][index]) + "\\\\ \\hline \n")
 
-    outFile.write("Total&\\multicolumn{3}{|c|}{" + str(total_list[0]) + "}&\\multicolumn{3}{|c|}{" + str(total_list[1]) + "}&\\multicolumn{3}{|c|}{" + str(total_list[2]) + "}\\\\ \\hline \n")
+    #outFile.write("Total&\\multicolumn{3}{|c|}{" + str(total_list[0]) + "}&\\multicolumn{3}{|c|}{" + str(total_list[1]) + "}&\\multicolumn{3}{|c|}{" + str(total_list[2]) + "}\\\\ \\hline \n")
     outFile.write("\\end{tabular}\n")
     outFile.write("\\end{table}\n")
 

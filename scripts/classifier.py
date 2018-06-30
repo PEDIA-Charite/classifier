@@ -64,8 +64,6 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
     X = normalizer.transform(X)
     y = np.array(y)
 
-    if not param_g:
-        param_g = config_data['param_g']
     if not param_c:
         param_c = config_data['param_c']
 
@@ -73,16 +71,12 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
     if param_fold > 0:
         group = np.array(group)
         best_param = param_tuning(X, y, group, config_data, rand_num)
-        param_g = best_param[0] 
-        param_c = best_param[1] 
+        param_c = best_param[0] 
             
     logger.info("Start training")
-    logger.info("RBF sampler with gamma: %f", param_g)
     logger.info("Linear SVM with C: %f", param_c)
-    rbf_feature = RBFSampler(gamma=param_g, random_state=rand_num)
-    X_features = rbf_feature.fit_transform(X)
     clf = svm.LinearSVC(C=param_c, class_weight='balanced', loss='hinge', random_state=rand_num)
-    clf.fit(X_features, y)
+    clf.fit(X, y)
     logger.debug("Feature weights %s", str(clf.coef_[0]))
     
     # Classify test set
@@ -100,7 +94,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
 
         test_X = np.array(test_X)
         test_X = test_X.astype(float)
-        X = rbf_feature.fit_transform(normalizer.transform(test_X))
+        X = normalizer.transform(test_X)
         score = clf.decision_function(X)
 
         score = np.array(score)
@@ -146,10 +140,9 @@ def param_tuning(X, y, group, config_data, rand_num):
     param_fold = config_data['param_fold']
     
     tuning_set = []
-    for g in PARAM_G:
-        for c in PARAM_C:
-            tuning_set.append([g, c])
 
+    for c in PARAM_C:
+        tuning_set.append([c])
     group = np.array(group)
     
     logger.info("Tuning hyper-parameters")
@@ -159,7 +152,7 @@ def param_tuning(X, y, group, config_data, rand_num):
         # Calculate top 1 acc on each param
         fold_count = 1
         acc = 0
-        logger.info("Start parameter tuning on C: %f, gamma: %f", param[1], param[0])
+        logger.info("Start parameter tuning on C: %f", param[0])
         for train_index, test_index in GroupKFold(n_splits=param_fold).split(X, y, group):
             logger.debug("Start parameter tuning on fold %d", fold_count)
 
@@ -167,9 +160,8 @@ def param_tuning(X, y, group, config_data, rand_num):
             y_train, y_test = y[train_index], y[test_index]
             
             # Train classifier 
-            rbf_feature = RBFSampler(gamma=param[0], random_state=1)
-            X_features = rbf_feature.fit_transform(X_train)
-            clf = svm.LinearSVC(C=param[1], class_weight='balanced',loss='hinge', random_state=rand_num)
+            X_features = X_train
+            clf = svm.LinearSVC(C=param[0], class_weight='balanced',loss='hinge', random_state=rand_num)
             clf.fit(X_features, y_train)
             fold_count += 1
             top_count = 0
@@ -183,7 +175,7 @@ def param_tuning(X, y, group, config_data, rand_num):
                 y_case_test = y_test[test_idx][0]
 
                 score = []
-                X_test_feature = rbf_feature.fit_transform(x_case_test)
+                X_test_feature = x_case_test
                 score = clf.decision_function(X_test_feature)
 
                 score = np.array(score)
@@ -195,7 +187,7 @@ def param_tuning(X, y, group, config_data, rand_num):
                     top_count += 1
             acc += top_count/len(test_case)
         param_acc.append(acc/param_fold)
-        logger.debug("Parameter C: %f, gamma: %f, Top 1 acc: %f", param[0], param[1], acc/param_fold)
+        logger.debug("Parameter C: %f, Top 1 acc: %f", param[0], acc/param_fold)
     max_acc = max(param_acc)
     max_index = [ i for i,v in enumerate(param_acc) if v==max_acc ]
 
@@ -206,7 +198,7 @@ def param_tuning(X, y, group, config_data, rand_num):
         max_params = np.array(tuning_set)[max_index]
         index = np.argmin(max_params[:,1])
         best_param = list(max_params[index])
-    logger.info("Best parameter C: %f, gamma: %f, Top 1 acc: %f", best_param[1], best_param[0], max_acc)
+    logger.info("Best parameter C: %f, Top 1 acc: %f", best_param[0], max_acc)
     
                     #filename = path + "/" + case + ".csv"
                     #with open(filename, 'w') as csvfile:

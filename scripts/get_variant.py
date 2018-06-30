@@ -19,7 +19,7 @@ with open(pedia_path) as csvfile:
     count = 0
     for row in reader:
         if count < 10:
-            gene_list.append(row['gene_id'])
+            gene_list.append(row['gene_name'])
         count = count + 1
 prefix = filename.split('/')[-1].split('.')[0]
 genes = '|'.join(gene_list)

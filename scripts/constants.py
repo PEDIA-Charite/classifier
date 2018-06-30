@@ -17,5 +17,5 @@ NORMAL_MODE = 0
 SERVER_MODE = 1
 
 # Default param C
-PARAM_C = [pow(2, i) for i in range(0, 8, 2)]
+PARAM_C = [pow(2, i) for i in range(-6, 12, 2)]
 PARAM_G = [pow(2, i) for i in range(-6, -1, 2)]
