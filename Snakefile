@@ -281,7 +281,7 @@ rule CV_all_g:
 
 rule LOOCV_g:
     input:
-        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
+        sum_file = sim_workflow("performanceEvaluation/data/CV_gestalt/{data}.csv")
     output:
         "../output/loocv_g/LOOCV_{data}/run.log"
     params:
@@ -290,7 +290,7 @@ rule LOOCV_g:
         train = "../../3_simulation/json_simulation/{data}/CV_gestalt/"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -l -g -o '{params.dir}' --cv-cores 10;
+        python {classify_file} '{params.train}' '{params.label}' -l -g -o '{params.dir}' --cv-cores 5 -p 5 ;
         """
 
 rule LOOCV_all_g:

@@ -196,7 +196,7 @@ def param_tuning(X, y, group, config_data, rand_num):
         best_param = tuning_set[max_index[0]]
     else:
         max_params = np.array(tuning_set)[max_index]
-        index = np.argmin(max_params[:,1])
+        index = np.argmin(max_params[:,0])
         best_param = list(max_params[index])
     logger.info("Best parameter C: %f, Top 1 acc: %f", best_param[0], max_acc)
     
