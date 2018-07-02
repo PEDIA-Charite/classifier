@@ -7,7 +7,7 @@ output_dir = '../../latex/table/'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 outFile = open(output_dir + 'acc_cv_result.tex', "w")
-input_dir =['../../output/cv']
+input_dir =['../../output/cv_g']
 #input_dir =['../../output/cv', '../../output/cv_g']
 caption = ['all cases', 'the cases with gestalt in pathogenic mutation gene']
 label = ['table:cv', 'table:cv_g']

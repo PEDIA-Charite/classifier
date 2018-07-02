@@ -10,9 +10,11 @@ subworkflow pub_sim_workflow:
 	snakefile: "../3_simulation/publication_simulation/Snakefile"
 
 DATA_TYPE = ["1KG", "ExAC", "IRAN"]
-FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1_4",
-           "2_3", "2_4", "3_4", "0_1_2", "0_1_3", "0_1_4", "0_2_3", "0_2_4", "0_3_4", "1_2_3", "1_2_4", "1_3_4", "2_3_4",
-           "0_1_2_3", "0_2_3_4", "0_1_3_4", "0_1_2_4", "1_2_3_4"]
+FEATURE = ["0", "1", "2", "3", "4", "0_3", "0_4", "1_2", 
+           "3_4", "0_3_4", "0_2_3_4", "0_1_3_4"]
+#FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1_4",
+#           "2_3", "2_4", "3_4", "0_1_2", "0_1_3", "0_1_4", "0_2_3", "0_2_4", "0_3_4", "1_2_3", "1_2_4", "1_3_4", "2_3_4",
+#           "0_1_2_3", "0_2_3_4", "0_1_3_4", "0_1_2_4", "1_2_3_4"]
 
 RUN = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -242,7 +244,7 @@ rule LOOCV:
         train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -l -g -o '{params.dir}' -p 5 --cv-rep 5 --cv-cores 10;
+        python {classify_file} '{params.train}' '{params.label}' -l -g -o '{params.dir}' -p 5 --cv-rep 5 --cv-cores 5;
         """
 
 rule LOOCV_all:
@@ -306,7 +308,7 @@ rule LOOCV_all_g:
 
 rule CV_exclude_g:
     input:
-        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
+        sum_file = sim_workflow("performanceEvaluation/data/CV_gestalt/{data}.csv")
     output:
         "../output/exclude_g/CV_{data}_e_{exclude}/run.log"
     params:
@@ -324,6 +326,60 @@ rule CV_exclude_all_g:
         expand("../output/exclude_g/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
     output:
         touch("../output/exclude_g/CV_exclude_all.log")
+
+##########################################################################
+# Test the cases with real exome but we used the simulated exome instead of
+# real exome. We would like to compare the performace between using real 
+# exome and simulated one
+##########################################################################
+
+rule test_simulated_g:
+    input:
+        train = sim_workflow("performanceEvaluation/data/Real/gestalt/train_{data}.csv"),
+        test = sim_workflow("performanceEvaluation/data/Real/gestalt/test_simulated_{data}.csv")
+    output:
+        csv = "../output/real_simulated_test_g/{data}/run.log"
+    params:
+        label = "{data}",
+        dir = "../output/real_simulated_test_g/{data}/",
+        train = "../../3_simulation/json_simulation/real/gestalt/train/{data}/",
+        test = "../../3_simulation/json_simulation/real/gestalt/test_{data}/"
+    shell:
+        """
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
+        """
+
+rule test_simulated_g_all:
+    input:
+        expand("../output/real_simulated_test_g/{data}/run.log", data=DATA_TYPE)
+    output:
+        touch("../output/real_simulated_test_g/all.log")
+
+#########################################################################
+# Train the model with simulated cases and test the cases with real exome
+#########################################################################
+
+rule test_g:
+    input:
+        train = sim_workflow("performanceEvaluation/data/Real/gestalt/train_{data}.csv"),
+        test = sim_workflow("performanceEvaluation/data/Real/gestalt/test_real.csv")
+    output:
+        csv = "../output/real_test_g/{data}/run.log"
+    params:
+        label = "{data}",
+        dir = "../output/real_test_g/{data}/",
+        train = "../../3_simulation/json_simulation/real/gestalt/train/{data}/",
+        test = "../../3_simulation/json_simulation/real/gestalt/test/"
+    shell:
+        """
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
+        """
+
+rule test_g_all:
+    input:
+        expand("../output/real_test_g/{data}/run.log", data=DATA_TYPE)
+    output:
+        touch("../output/real_test_g/all.log")
 
 rule Report:
     shell:
