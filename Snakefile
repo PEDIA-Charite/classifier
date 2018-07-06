@@ -1,5 +1,5 @@
 workdir: "scripts"
-configfile: "../config.yml"
+configfile: "../../config.yml"
 
 subworkflow sim_workflow:
 	workdir: "../3_simulation"
@@ -10,7 +10,7 @@ subworkflow pub_sim_workflow:
 	snakefile: "../3_simulation/publication_simulation/Snakefile"
 
 DATA_TYPE = ["1KG", "ExAC", "IRAN"]
-FEATURE = ["0", "1", "2", "3", "4", "0_3", "0_4", "1_2", 
+FEATURE = ["0", "1", "2", "3", "4", "0_3", "0_4", "1_2", "0_2_3", 
            "3_4", "0_3_4", "0_2_3_4", "0_1_3_4"]
 #FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1_4",
 #           "2_3", "2_4", "3_4", "0_1_2", "0_1_3", "0_1_4", "0_2_3", "0_2_4", "0_3_4", "1_2_3", "1_2_4", "1_3_4", "2_3_4",
@@ -220,7 +220,7 @@ rule CV_exclude:
         train = "../../3_simulation/json_simulation/{data}/CV/"
     shell:
         """
-        python {classify_file} {params.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir} --cv-cores 5;
+        python {classify_file} {params.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5 --cv-rep 10;
         """
 
 rule CV_exclude_all:
@@ -318,7 +318,7 @@ rule CV_exclude_g:
         train = "../../3_simulation/json_simulation/{data}/CV_gestalt/"
     shell:
         """
-        python {classify_file} {params.train} {params.label} -c 10 -g -e {params.exclude_feature} -o {params.dir} --cv-cores 5;
+        python {classify_file} {params.train} {params.label} -c 10 -g -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5 --cv-rep 10 ;
         """
 
 rule CV_exclude_all_g:
