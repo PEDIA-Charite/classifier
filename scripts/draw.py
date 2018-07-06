@@ -96,6 +96,8 @@ def manhattan(pedia, path, ID='all'):
                                         if np_names_y[i] < sc:
                                             np_names_y[i] = sc
                             else:
+                                if gene_symbol == 'SMARCA4':
+                                    sc -= 0.5
                                 np_names.append(gene_symbol)
                                 np_names_x.append(pos)
                                 np_names_y.append(sc)
@@ -114,17 +116,17 @@ def manhattan(pedia, path, ID='all'):
                             names_x.append(pos)
                             names_y.append(sc)
 
-            plt.figure(figsize=(32, 16))
-            plt.scatter(s_pos, sanos, color='#70ACC0', alpha=0.6, marker='o', s=160, label=('neutrals'))
-            plt.scatter(s_pos2, sanos2, color='#008B8B', alpha=0.6, marker='o', s=160, label=('neutrals'))
+            plt.figure(figsize=(36, 16))
+            plt.scatter(s_pos, sanos, color='#C0C0C0', marker='o', s=160, label=('neutrals'))
+            plt.scatter(s_pos2, sanos2, color='#696969', marker='o', s=160, label=('neutrals'))
             plt.scatter(p_pos, pathos, color='red', marker='o', s=160, label='pathogenic')
             plt.axhline(y=0, linestyle='dashed', linewidth=1)
 
             for i in range(len(names)):
-                plt.annotate(names[i], xy = (names_x[i], names_y[i]), xytext = (names_x[i], names_y[i]), fontsize=36, color='#AA1C7D')
+                plt.annotate(names[i], xy = (names_x[i], names_y[i]), xytext = (names_x[i], names_y[i] + 0.1), fontsize=36, color='red', style='italic')
             for i in range(len(np_names)):
-                plt.annotate(np_names[i], xy = (np_names_x[i], np_names_y[i]), xytext = (np_names_x[i], np_names_y[i]), fontsize=36, color='#AA1C7D')
-            plt.xlabel('chromosomal position', fontsize=28)
+                plt.annotate(np_names[i], xy = (np_names_x[i], np_names_y[i]), xytext = (np_names_x[i] + 3, np_names_y[i] + 0.1), fontsize=36, color='#696969', style='italic')
+            plt.xlabel('chromosomal position', fontsize=38)
 
             ticks = []
             tick = 0
@@ -134,7 +136,7 @@ def manhattan(pedia, path, ID='all'):
                 tick += (i / 2) + 10 ** 6
             plt.xticks(ticks)
             plt.ylabel('PEDIA score', fontsize=38)
-            plt.legend(loc='center left', prop={'size':23}, bbox_to_anchor=(1,0.5))
+            plt.legend(loc='upper left', prop={'size':30}, bbox_to_anchor=(0.85,0.95))
             frame1 = plt.gca()
             chr_names = []
 
@@ -159,12 +161,16 @@ def manhattan(pedia, path, ID='all'):
                 y_max = max([max(sanos), max(sanos2)])
             plt.ylim(y_min, y_max+(y_max/10)) #ymin-(ymax/30)
             plt.xlim(0, ticks[-1]+(chr_sizes[-1]/2)+10**6)
-            plt.title(ID)
+            #plt.title(ID)
             path = os.path.join(path, 'figures')
             if not os.path.exists(path):
                 os.makedirs(path)
-            filename = path + "/manhattan_" + ID + ".png"
-            plt.savefig(filename)
+            
+            filename = path + "/manhattan_" + ID + ".svg"
+            #filename = path + "/manhattan_" + ID + ".png"
+            plt.tight_layout()
+            #plt.savefig(filename)
+            plt.savefig(filename, format="svg")
             plt.close()
 
 
@@ -236,9 +242,8 @@ def manhattan_all(pedia, path):
                         names.append(gene_symbol + "-" + case)
                         names_x.append(pos)
                         names_y.append(sc)
-
-    plt.scatter(s_pos, sanos, color='#70ACC0', alpha=0.6, marker='o', s=200, label=('neutrals')) #s=30
-    plt.scatter(s_pos2, sanos2, color='#008B8B', alpha=0.6, marker='o', s=200, label=('neutrals')) #s=30  #385660
+    plt.scatter(s_pos, sanos, color='#D3D384', marker='o', s=200, label=('neutrals'))
+    plt.scatter(s_pos2, sanos2, color='#929084', marker='o', s=200, label=('neutrals'))
     plt.scatter(p_pos, pathos, color='red', marker='o', s=200, label='pathogenic') #s=30
     plt.axhline(y=0, linestyle='dashed', linewidth=1)
 
