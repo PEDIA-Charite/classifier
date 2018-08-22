@@ -9,12 +9,9 @@ subworkflow pub_sim_workflow:
 	workdir: "../3_simulation/publication_simulation"
 	snakefile: "../3_simulation/publication_simulation/Snakefile"
 
-DATA_TYPE = ["1KG", "ExAC", "IRAN"]
+DATA_TYPE = ["1KG", "IRAN"]
 FEATURE = ["0", "1", "2", "3", "4", "0_3", "0_4", "1_2", "0_2_3", 
            "3_4", "0_3_4", "0_2_3_4", "0_1_3_4"]
-#FEATURE = ["0", "1", "2", "3", "4", "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1_4",
-#           "2_3", "2_4", "3_4", "0_1_2", "0_1_3", "0_1_4", "0_2_3", "0_2_4", "0_3_4", "1_2_3", "1_2_4", "1_3_4", "2_3_4",
-#           "0_1_2_3", "0_2_3_4", "0_1_3_4", "0_1_2_4", "1_2_3_4"]
 
 RUN = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -67,14 +64,14 @@ rule publication_simulation_test_all:
 rule test_simulated:
     input:
         train = sim_workflow("performanceEvaluation/data/Real/train_{data}.csv"),
-        test = sim_workflow("performanceEvaluation/data/Real/test_simulated_{data}.csv")
+        test = "../../3_simulation/paper/all.out"
     output:
-        csv = "../output/real_simulated_test/{data}/run.log"
+        csv = "../output/real_simulated_test_paper/{data}/{run}/run.log"
     params:
         label = "{data}",
-        dir = "../output/real_simulated_test/{data}/",
+        dir = "../output/real_simulated_test_paper/{data}/{run}",
         train = "../../3_simulation/json_simulation/real/train/{data}/",
-        test = "../../3_simulation/json_simulation/real/test_{data}/"
+        test = "../../3_simulation/paper/json_simulation/{data}/{run}/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
@@ -82,7 +79,7 @@ rule test_simulated:
 
 rule test_simulated_all:
     input:
-        expand("../output/real_simulated_test/{data}/run.log", data=DATA_TYPE)
+        expand("../output/real_simulated_test_paper/{data}/{run}/run.log", data=DATA_TYPE, run=RUN)
     output:
         touch("../output/real_simulated_test/all.log")
 
@@ -336,14 +333,14 @@ rule CV_exclude_all_g:
 rule test_simulated_g:
     input:
         train = sim_workflow("performanceEvaluation/data/Real/gestalt/train_{data}.csv"),
-        test = sim_workflow("performanceEvaluation/data/Real/gestalt/test_simulated_{data}.csv")
+        test = "../../3_simulation/paper/all.out"
     output:
-        csv = "../output/real_simulated_test_g/{data}/run.log"
+        csv = "../output/real_simulated_test_g_paper/{data}/{run}/run.log"
     params:
         label = "{data}",
-        dir = "../output/real_simulated_test_g/{data}/",
+        dir = "../output/real_simulated_test_g_paper/{data}/{run}",
         train = "../../3_simulation/json_simulation/real/gestalt/train/{data}/",
-        test = "../../3_simulation/json_simulation/real/gestalt/test_{data}/"
+        test = "../../3_simulation/paper/json_simulation/{data}/{run}/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
@@ -351,9 +348,9 @@ rule test_simulated_g:
 
 rule test_simulated_g_all:
     input:
-        expand("../output/real_simulated_test_g/{data}/run.log", data=DATA_TYPE)
+        expand("../output/real_simulated_test_g_paper/{data}/{run}/run.log", data=DATA_TYPE, run=RUN)
     output:
-        touch("../output/real_simulated_test_g/all.log")
+        touch("../output/real_simulated_test_g_paper/all.log")
 
 #########################################################################
 # Train the model with simulated cases and test the cases with real exome
@@ -364,10 +361,10 @@ rule test_g:
         train = sim_workflow("performanceEvaluation/data/Real/gestalt/train_{data}.csv"),
         test = sim_workflow("performanceEvaluation/data/Real/gestalt/test_real.csv")
     output:
-        csv = "../output/real_test_g/{data}/run.log"
+        csv = "../output/real_test_g/{data}/{run}/run.log"
     params:
         label = "{data}",
-        dir = "../output/real_test_g/{data}/",
+        dir = "../output/real_test_g/{data}/{run}",
         train = "../../3_simulation/json_simulation/real/gestalt/train/{data}/",
         test = "../../3_simulation/json_simulation/real/gestalt/test/"
     shell:
@@ -377,7 +374,7 @@ rule test_g:
 
 rule test_g_all:
     input:
-        expand("../output/real_test_g/{data}/run.log", data=DATA_TYPE)
+        expand("../output/real_test_g/{data}/{run}/run.log", data=DATA_TYPE, run=RUN)
     output:
         touch("../output/real_test_g/all.log")
 

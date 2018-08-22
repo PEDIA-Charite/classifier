@@ -12,13 +12,14 @@ output_dir = '../../latex/table/'
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 outFile = open(output_dir + 'pedia_cv_result.tex', "w")
+
 #Output text
-input_dir =['../../output/cv']
-#input_dir =['../../output/cv', '../../output/cv_g']
-type_suffix = ['', '_g']
-caption = ['all cases in ', 'the cases with gestalt in ']
+input_dir =['../../output/cv_g']
+type_suffix = ['_g']
+caption = ['the cases with gestalt in ']
 data_type = ["1KG", "ExAC", "IRAN"]
-label = ['table:pedia_cv', 'table:pedia_cv_g']
+label = ['table:pedia_cv_g']
+
 #Output text
 for type_idx, type_dir in enumerate(input_dir):
     outFile.write("\\begin{center}\n")
@@ -129,7 +130,6 @@ for type_idx, type_dir in enumerate(input_dir):
 
         pyplot.gca().set_yscale("log")
         pyplot.grid(True)
-        #pyplot.legend()
         pyplot.legend(loc = 2, prop = {'size':12})
         pyplot.xlabel('Value', fontsize = 18)
         pyplot.ylabel('Counts', fontsize = 18)
@@ -143,10 +143,10 @@ for type_idx, type_dir in enumerate(input_dir):
     outFile.write("\\end{center}\n")
 
 outFile.close()
-sample_filename = "../../output/cv/CV_1KG/train.csv"
+sample_filename = "../../output/cv_g/CV_1KG/train.csv"
 sample_dict = {}
 label = ['table:cv_poor_case']
-#label = ['table:cv_poor_case', 'table:cv_poor_g_case']
+
 with open(sample_filename) as csvfile:
     reader = csv.reader(csvfile)
     flag = 0
@@ -167,7 +167,7 @@ for idx, input_type in enumerate(input_dir):
         reader = csv.reader(csvfile)
         for row in reader:
             pedia_file = input_type + "/CV_" + name + "/cv_" + str(cv_idx) + "/" + row[0] + ".csv"
-            json_data = json.load(open('../../../3_simulation/json_simulation/1KG/CV/' + row[0] + '.json'))
+            json_data = json.load(open('../../../3_simulation/json_simulation/1KG/CV_gestalt/' + row[0] + '.json'))
             syndrome = json_data['selected_syndromes'][0]['syndrome_name']
             flag = 0
             rank = 1
@@ -185,7 +185,6 @@ for idx, input_type in enumerate(input_dir):
                     flag = 1
 
     outFile.write("\\begin{center}\n")
-    #outFile.write("\\begin{longtable}[ht]\n")
     outFile.write("\\begin{longtable}{|c|c|c|c|c|c|c|c|}\n")
     outFile.write("\\caption{Cases with poor performance on " + caption[idx] + "}\\\\ \n")
     outFile.write("\\hline \n")
@@ -197,7 +196,6 @@ for idx, input_type in enumerate(input_dir):
     outFile.write("\\multicolumn{8}{|c|}{Pedia between 0 and 1}\\\\ \\hline \n")
     for pedia in pedia_score_1:
         outFile.write("&".join(pedia) + "\\\\ \\hline \n")
-    #outFile.write("\\end{tabular}\n")
     outFile.write("\\end{longtable}\n")
     outFile.write("\\end{center}\n")
 outFile.close()
