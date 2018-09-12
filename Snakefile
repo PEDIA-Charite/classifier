@@ -1,6 +1,14 @@
 workdir: "scripts"
 configfile: "../../config.yml"
 
+subworkflow real_json_workflow:
+	workdir: "../3_simulation/json_real"
+	snakefile: "../3_simulation/json_real/Snakefile"
+
+subworkflow vcf_workflow:
+	workdir: "../data/PEDIA/vcfs"
+	snakefile: "../data/PEDIA/vcfs/Snakefile"
+
 subworkflow sim_workflow:
 	workdir: "../3_simulation"
 	snakefile: "../3_simulation/Snakefile"
@@ -115,8 +123,8 @@ rule test_all:
 
 rule test_unknown:
     input:
-        train = sim_workflow("performanceEvaluation/data/CV/{data}.csv"),
-        json = sim_workflow("json_simulation/real/unknown_test/{sample}.json")
+        #train = sim_workflow("performanceEvaluation/data/CV/{data}.csv"),
+        json = real_json_workflow("json_real/unknown_test/{sample}.json")
     output:
         csv = "../output/test/{data}/{sample}/{sample}.csv"
     params:
@@ -131,7 +139,7 @@ rule test_unknown:
 rule map_pedia:
     input:
         csv = "../output/test/{data}/{sample}/{sample}.csv",
-        json = sim_workflow("json_simulation/real/unknown_test/{sample}.json")
+        json = real_json_workflow("json_real/unknown_test/{sample}.json")
     output:
         json = "../output/test/{data}/{sample}/{sample}_pedia.json",
     params:
@@ -145,8 +153,7 @@ rule map_pedia:
 rule map_vcf:
     input:
         csv = "../output/test/{data}/{sample}/{sample}.csv",
-        #vcf = "../../3_simulation/vcf_annotation/{sample}.annotation.vcf.gz"
-        vcf = sim_workflow("vcf_annotation/{sample}.annotation.vcf.gz")
+        vcf = vcf_workflow("annotated_vcfs/{sample}_annotated.vcf.gz")
     output:
         vcf = "../output/test/{data}/{sample}/{sample}.vcf.gz",
     params:
