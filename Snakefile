@@ -1,10 +1,6 @@
 workdir: "scripts"
 configfile: "../../config.yml"
 
-subworkflow real_json_workflow:
-	workdir: "../3_simulation/json_real"
-	snakefile: "../3_simulation/json_real/Snakefile"
-
 subworkflow vcf_workflow:
 	workdir: "../data/PEDIA/vcfs"
 	snakefile: "../data/PEDIA/vcfs/Snakefile"
@@ -37,86 +33,6 @@ rule all:
         expand("../output/loocv/LOOCV_{data}/run.log", data=DATA_TYPE),
         expand("../output/exclude/CV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
 
-#################################################################
-# Test the publication data set in Deep Gestalt paper 
-#################################################################
-
-rule publication_simulation_test:
-    input:
-        train = pub_sim_workflow("{background}_{run}_train.log"),
-        test = pub_sim_workflow("{background}_{run}_test.log")
-    output:
-        csv = "../output/publication_simulation_test/{background}/REP_{run}/run.log"
-    params:
-        label = "{background}",
-        dir = "../output/publication_simulation_test/{background}/REP_{run}",
-        train = "../../3_simulation/publication_simulation/REP_{run}/json_simulation/{background}/train/",
-        test = "../../3_simulation/publication_simulation/REP_{run}/json_simulation/{background}/CV/"
-    shell:
-        """
-        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
-        """
-
-rule publication_simulation_test_all:
-    input:
-        expand("../output/publication_simulation_test/{data}/REP_{rep}/run.log", data=DATA_TYPE, rep=RUN)
-    output:
-        touch("../output/publication_simulation_test/all.log")
-
-##########################################################################
-# Test the cases with real exome but we used the simulated exome instead of
-# real exome. We would like to compare the performace between using real 
-# exome and simulated one
-##########################################################################
-
-rule test_simulated:
-    input:
-        train = sim_workflow("performanceEvaluation/data/Real/train_{data}.csv"),
-        test = "../../3_simulation/paper/all.out"
-    output:
-        csv = "../output/real_simulated_test_paper/{data}/{run}/run.log"
-    params:
-        label = "{data}",
-        dir = "../output/real_simulated_test_paper/{data}/{run}",
-        train = "../../3_simulation/json_simulation/real/train/{data}/",
-        test = "../../3_simulation/paper/json_simulation/{data}/{run}/"
-    shell:
-        """
-        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
-        """
-
-rule test_simulated_all:
-    input:
-        expand("../output/real_simulated_test_paper/{data}/{run}/run.log", data=DATA_TYPE, run=RUN)
-    output:
-        touch("../output/real_simulated_test/all.log")
-
-#########################################################################
-# Train the model with simulated cases and test the cases with real exome
-#########################################################################
-
-rule test:
-    input:
-        train = sim_workflow("performanceEvaluation/data/Real/train_{data}.csv"),
-        test = sim_workflow("performanceEvaluation/data/Real/test_real.csv")
-    output:
-        csv = "../output/real_test/{data}/run.log"
-    params:
-        label = "{data}",
-        dir = "../output/real_test/{data}/",
-        train = "../../3_simulation/json_simulation/real/train/{data}/",
-        test = "../../3_simulation/json_simulation/real/test/"
-    shell:
-        """
-        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
-        """
-
-rule test_all:
-    input:
-        expand("../output/real_test/{data}/run.log", data=DATA_TYPE)
-    output:
-        touch("../output/real_test/all.log")
-
 ############################################################################
 # Test the case with unknown diagnosis
 ############################################################################
@@ -124,13 +40,13 @@ rule test_all:
 rule test_unknown:
     input:
         #train = sim_workflow("performanceEvaluation/data/CV/{data}.csv"),
-        json = real_json_workflow("json_real/unknown_test/{sample}.json")
+        json = sim_workflow("jsons/real/unknown_test/{sample}.json")
     output:
         csv = "../output/test/{data}/{sample}/{sample}.csv"
     params:
         label = "{data}",
         dir = "../output/test/{data}/{sample}",
-        train = "../../3_simulation/json_simulation/{data}/CV"
+        train = "../../3_simulation/jsons/{data}/CV"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -t {input.json} -g -o '{params.dir}';
@@ -139,7 +55,7 @@ rule test_unknown:
 rule map_pedia:
     input:
         csv = "../output/test/{data}/{sample}/{sample}.csv",
-        json = real_json_workflow("json_real/unknown_test/{sample}.json")
+        json = sim_workflow("jsons/real/unknown_test/{sample}.json")
     output:
         json = "../output/test/{data}/{sample}/{sample}_pedia.json",
     params:
@@ -181,6 +97,94 @@ rule map_all:
         touch("../output/test/all")
 
 
+# The following rules are mainly for the performance evaluation
+# 1. F2G publication test set
+# 2. Test case with real exome but using simulated one
+# 3. Test case with real exome
+# 4. Cross-validation
+# 5. LOOCV cross-validation
+
+
+#################################################################
+# Test the publication data set in Deep Gestalt paper 
+#################################################################
+
+rule publication_simulation_test:
+    input:
+        train = pub_sim_workflow("{background}_{run}_train.log"),
+        test = pub_sim_workflow("{background}_{run}_test.log")
+    output:
+        csv = "../output/publication_simulation_test/{background}/REP_{run}/run.log"
+    params:
+        label = "{background}",
+        dir = "../output/publication_simulation_test/{background}/REP_{run}",
+        train = "../../3_simulation/publication_simulation/REP_{run}/jsons/{background}/train/",
+        test = "../../3_simulation/publication_simulation/REP_{run}/jsons/{background}/CV/"
+    shell:
+        """
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
+        """
+
+rule publication_simulation_test_all:
+    input:
+        expand("../output/publication_simulation_test/{data}/REP_{rep}/run.log", data=DATA_TYPE, rep=RUN)
+    output:
+        touch("../output/publication_simulation_test/all.log")
+
+##########################################################################
+# Test the cases with real exome but we used the simulated exome instead of
+# real exome. We would like to compare the performace between using real 
+# exome and simulated one
+##########################################################################
+
+rule test_simulated:
+    input:
+        train = sim_workflow("performanceEvaluation/data/Real/train_{data}.csv"),
+        test = "../../3_simulation/paper/all.out"
+    output:
+        csv = "../output/real_simulated_test_paper/{data}/{run}/run.log"
+    params:
+        label = "{data}",
+        dir = "../output/real_simulated_test_paper/{data}/{run}",
+        train = "../../3_simulation/jsons/real/train/{data}/",
+        test = "../../3_simulation/paper/jsons/{data}/{run}/"
+    shell:
+        """
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
+        """
+
+rule test_simulated_all:
+    input:
+        expand("../output/real_simulated_test_paper/{data}/{run}/run.log", data=DATA_TYPE, run=RUN)
+    output:
+        touch("../output/real_simulated_test/all.log")
+
+#########################################################################
+# Train the model with simulated cases and test the cases with real exome
+#########################################################################
+
+rule test:
+    input:
+        train = sim_workflow("performanceEvaluation/data/Real/train_{data}.csv"),
+        test = sim_workflow("performanceEvaluation/data/Real/test_real.csv")
+    output:
+        csv = "../output/real_test/{data}/run.log"
+    params:
+        label = "{data}",
+        dir = "../output/real_test/{data}/",
+        train = "../../3_simulation/jsons/real/train/{data}/",
+        test = "../../3_simulation/jsons/real/test/"
+    shell:
+        """
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
+        """
+
+rule test_all:
+    input:
+        expand("../output/real_test/{data}/run.log", data=DATA_TYPE)
+    output:
+        touch("../output/real_test/all.log")
+
 ############################################################################
 # Run k-fold cross-validation. Default k: 10
 ############################################################################
@@ -193,7 +197,7 @@ rule CV:
     params:
         label = "{data}",
         dir = "../output/cv/CV_{data}",
-        train = "../../3_simulation/json_simulation/{data}/CV/"
+        train = "../../3_simulation/jsons/{data}/CV/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -c 10 -g -o '{params.dir}' -p 5 --cv-rep 10;
@@ -221,7 +225,7 @@ rule CV_exclude:
         label = "{data}",
         dir = "../output/exclude/CV_{data}_e_{exclude}",
         exclude_feature = "{exclude}",
-        train = "../../3_simulation/json_simulation/{data}/CV/"
+        train = "../../3_simulation/jsons/{data}/CV/"
     shell:
         """
         python {classify_file} {params.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5 --cv-rep 10;
@@ -245,7 +249,7 @@ rule LOOCV:
     params:
         label = "{data}",
         dir = "../output/loocv/LOOCV_{data}",
-        train = "../../3_simulation/json_simulation/{data}/CV/"
+        train = "../../3_simulation/jsons/{data}/CV/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -l -g -o '{params.dir}' -p 5 --cv-rep 5 --cv-cores 5;
@@ -269,7 +273,7 @@ rule CV_g:
     params:
         label = "{data}",
         dir = "../output/cv_g/CV_{data}",
-        train = "../../3_simulation/json_simulation/{data}/CV_gestalt/"
+        train = "../../3_simulation/jsons/{data}/CV_gestalt/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -c 10 -g  -o '{params.dir}' --cv-rep 10 --cv-cores 5 -p 5;
@@ -293,7 +297,7 @@ rule LOOCV_g:
     params:
         label = "{data}",
         dir = "../output/loocv_g/LOOCV_{data}",
-        train = "../../3_simulation/json_simulation/{data}/CV_gestalt/"
+        train = "../../3_simulation/jsons/{data}/CV_gestalt/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -l -g -o '{params.dir}' --cv-cores 5 -p 5 ;
@@ -319,7 +323,7 @@ rule CV_exclude_g:
         label = "{data}",
         dir = "../output/exclude_g/CV_{data}_e_{exclude}",
         exclude_feature = "{exclude}",
-        train = "../../3_simulation/json_simulation/{data}/CV_gestalt/"
+        train = "../../3_simulation/jsons/{data}/CV_gestalt/"
     shell:
         """
         python {classify_file} {params.train} {params.label} -c 10 -g -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5 --cv-rep 10 ;
@@ -346,8 +350,8 @@ rule test_simulated_g:
     params:
         label = "{data}",
         dir = "../output/real_simulated_test_g_paper/{data}/{run}",
-        train = "../../3_simulation/json_simulation/real/gestalt/train/{data}/",
-        test = "../../3_simulation/paper/json_simulation/{data}/{run}/"
+        train = "../../3_simulation/jsons/real/gestalt/train/{data}/",
+        test = "../../3_simulation/paper/jsons/{data}/{run}/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
@@ -372,8 +376,8 @@ rule test_g:
     params:
         label = "{data}",
         dir = "../output/real_test_g/{data}/{run}",
-        train = "../../3_simulation/json_simulation/real/gestalt/train/{data}/",
-        test = "../../3_simulation/json_simulation/real/gestalt/test/"
+        train = "../../3_simulation/jsons/real/gestalt/train/{data}/",
+        test = "../../3_simulation/jsons/real/gestalt/test/"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g -o '{params.dir}' -p 5;
