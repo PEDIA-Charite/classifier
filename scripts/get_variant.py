@@ -1,50 +1,70 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import csv
 import getopt
 import sys
-import os 
+import os
 import gzip
+import logging
+import argparse
 
-opts, args = getopt.getopt(sys.argv[1:], "h::", ["input=", "output=", "pedia="])
-for opt, arg in opts:
-    if opt in ("--input"):
-        filename = arg
-    elif opt in ("--output"):
-        newfile = arg
-    elif opt in ("--pedia"):
-        pedia_path = arg
+logger = logging.getLogger(__name__)
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
+console.setFormatter(formatter)
+logger.addHandler(console)
 
-gene_list = []
-with open(pedia_path) as csvfile:
-    reader = csv.DictReader(csvfile)
-    count = 0
-    for row in reader:
-        if count < 10:
-            gene_list.append(row['gene_name'])
-        count = count + 1
-prefix = filename.split('/')[-1].split('.')[0]
-genes = '|'.join(gene_list)
-cmd = "bgzip -d -c " + filename + " | grep --line-buffered -E '" + genes + "' > " + newfile[0:-3]
-os.system(cmd)
-print(cmd)
+def main():
+    parser = argparse.ArgumentParser(description='Get variants in PEDIA genes')
+    parser.add_argument('-i', '--input', help='path of input VCF file')
+    parser.add_argument('-o', '--output', help='path of output VCF file')
+    parser.add_argument('-p', '--pedia', help='path of PEDIA file')
 
-with gzip.open(filename, 'r') as f:
-    line = f.readline()
-    flag = 1 
-    print(line)
-    with open('tmp.vcf', 'w') as tmp_file:
-        while line and flag:
-            line = line.decode('utf-8')
-            if "#CHROM" in line:
-                flag = 0
-                tmp = line.split('\t')
-                tmp[-1] = prefix
-                line = '\t'.join(tmp) + '\n'
-                tmp_file.write(line)
-            else:
-                tmp_file.write(line)
-                line = f.readline()
-cmd = 'cat tmp.vcf ' + newfile[0:-3] + ' > tmp && mv tmp ' + newfile[0:-3]
-os.system(cmd)
-cmd = 'bgzip ' + newfile[0:-3]
-os.system(cmd)
+    args = parser.parse_args()
+    input_vcf = args.input
+    output_vcf = args.output
+    pedia_path = args.pedia
 
+    get_variant(input_vcf, output_vcf, pedia_path)
+
+def get_variant(input_vcf, output_vcf, pedia_path):
+    # Parse gene list
+    with open(pedia_path) as csvfile:
+        reader = csv.DictReader(csvfile)
+        gene_list = [row['gene_id'] for row in reader]
+
+    prefix = output_vcf[0:-7]
+    tmp_name = output_vcf[0:-3]
+    # Filter out the variant which is not in gene list
+    with gzip.open(input_vcf, 'r') as f:
+        line = f.readline()
+        flag = 0
+        with open(tmp_name, 'w') as tmp_file:
+            while line:
+                line = line.decode('utf-8')
+                if flag:
+                    tmp = line.split('\t')
+                    for info in tmp[7].split(';'):
+                        if info.startswith('ANN='):
+                            ann = info
+                    if ann.split('|')[4] in gene_list:
+                        tmp_file.write(line)
+                    line = f.readline()
+                else:
+                    if "#CHROM" in line:
+                        flag = 1
+                        tmp = line.split('\t')
+                        tmp[-1] = prefix
+                        line = '\t'.join(tmp) + '\n'
+                        tmp_file.write(line)
+                        line = f.readline()
+                    else:
+                        tmp_file.write(line)
+                        line = f.readline()
+    cmd = 'bgzip ' + tmp_name
+    os.system(cmd)
+
+if __name__ == '__main__':
+    main()
