@@ -19,9 +19,9 @@ formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
 console_handle.setFormatter(formatter)
 logger.addHandler(console_handle)
 
-def loadPosition():
+def loadPosition(pos_file):
 
-    for line in open('allgenepositions.txt'):
+    for line in open(pos_file):
         fields = line[:-1].split('\t')
         nm = fields[0]
         chro = fields[1]
@@ -30,12 +30,12 @@ def loadPosition():
         if name not in genepos:
             genepos[name] = [chro, pos]
 
-def manhattan(pedia, path, ID='all'):
+def manhattan(pedia, path, pos_file, ID='all'):
     """ Displays the information in Data as a manhattan plot. If the optional variable ID is set
     to a string matching a case ID, only the results of this case will be displayed."""
 
     if not genepos:
-        loadPosition()
+        loadPosition(pos_file)
 
     for case in pedia:
         sanos = []
@@ -168,12 +168,12 @@ def manhattan(pedia, path, ID='all'):
             plt.close()
 
 
-def manhattan_all(pedia, path):
+def manhattan_all(pedia, path, pos_file):
     """ Displays the information in Data as a manhattan plot. If the optional variable ID is set
     to a string matching a case ID, only the results of this case will be displayed."""
 
     if not genepos:
-        loadPosition()
+        loadPosition(pos_file)
 
     plt.figure(figsize=(32, 16))
     sanos = []

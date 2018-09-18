@@ -31,7 +31,7 @@ def parse_arguments(parser):
     parser.add_argument('-c', '--cv', type=int, help='Enable k-fold cross validation. Default 10-fold')
     parser.add_argument('-l', '--loocv', action='store_true', help='Enable group leave one out cross validation')
     parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
-    parser.add_argument('-g', '--graph', action='store_true', help='Enable manhattan plot')
+    parser.add_argument('-g', '--graph', help='Enable manhattan plot and the path to geneposition file')
     parser.add_argument('-s', '--server', action='store_true', help='Enable server mode')
     parser.add_argument('-p', '--param-tuning-fold', type=int, help='Enable parameter tuning mode')
     parser.add_argument('-f', '--filter_feature', help='Filter sample without specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
@@ -58,6 +58,7 @@ def setup_config():
     data['param_fold'] = 0
     data['mode'] = TEST_MODE
     data['graph_mode'] = NO_GRAPH
+    data['pos_file'] = args.graph
     data['running_mode'] = NORMAL_MODE
     data['cv_rep'] = args.cv_rep
     data['param_c'] = args.param_c
@@ -124,7 +125,7 @@ def setup_config():
     else:
         data['running_mode'] = NORMAL_MODE
 
-    # k-fold param tuning 
+    # k-fold param tuning
     if args.param_tuning_fold:
         data['param_fold'] = int(args.param_tuning_fold)
 
@@ -145,7 +146,7 @@ def setup_config():
     return data
 
 def main():
-    
+
     # Parse input arguments and store in config_data
     config_data = setup_config()
 
@@ -161,7 +162,7 @@ def main():
     train_file = config_data['train_file']
     train_label = config_data['train_label']
     parse_json(train_path, train_file)
-    
+
 
     mode = config_data['mode']
     test_path = config_data['test_path']
@@ -199,8 +200,8 @@ def main():
         rank(pedia, train_label, output_path)
         if graph_mode == GRAPH:
             for case in pedia:
-                manhattan(pedia, output_path, case)
-            manhattan_all(pedia, output_path)
+                manhattan(pedia, output_path, config_data['pos_file'], case)
+            manhattan_all(pedia, output_path, config_data['pos_file'])
             draw_rank('red', train_label, output_path)
 
     elif mode == LOOCV_MODE:
@@ -211,7 +212,7 @@ def main():
         rank(pedia, train_label, output_path)
         if graph_mode == GRAPH:
             for case in pedia:
-                manhattan(pedia, output_path, case)
+                manhattan(pedia, output_path, config_data['pos_file'], case)
             draw_rank('red', train_label, output_path)
     elif mode == PARAM_TEST_MODE:
         for ite in range(config_data['cv_rep']):
@@ -225,8 +226,8 @@ def main():
             rank_tuning(train_label, path, config_data)
             if graph_mode == GRAPH:
                 for case in pedia:
-                    manhattan(pedia, path, case)
-                manhattan_all(pedia, path)
+                    manhattan(pedia, path, config_data['pos_file'], case)
+                manhattan_all(pedia, path, config_data['pos_file'])
                 draw_rank('red', train_label, path)
         rank_all_cv_tuning(train_label, output_path, config_data['cv_rep'])
     else:
@@ -241,8 +242,8 @@ def main():
             rank(pedia, train_label, path)
             if graph_mode == GRAPH:
                 for case in pedia:
-                    manhattan(pedia, path, case)
-                manhattan_all(pedia, path)
+                    manhattan(pedia, path, config_data['pos_file'], case)
+                manhattan_all(pedia, path, config_data['pos_file'])
                 draw_rank('red', train_label, path)
         rank_all_cv(train_label, output_path, config_data['cv_rep'])
 
