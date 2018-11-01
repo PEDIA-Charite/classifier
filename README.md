@@ -34,7 +34,7 @@ The optional parameters are:
 If you want to run on server, the testing json file is from stdin, and the output pedia score is to stdout.
 Hence, you don't need to use -t in server mode. The following command is the example for running on server.
 ```
-cat /data/8/projects/PEDIA/3_simulation/json_simulation/1KG/CV/131037.json | python pedia.py /data/8/projects/PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -s > pedia_score.csv
+cat PEDIA/3_simulation/json_simulation/1KG/CV/131037.json | python pedia.py PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -s > pedia_score.csv
 ```
 The pedia score for this json file is in pedia_score.csv
 
@@ -43,24 +43,24 @@ The pedia score for this json file is in pedia_score.csv
 Execute the following command. The output will be in output/ directory.
 If you want to prioritize one case, then typing the file name in testing argument.
 ```
-python pedia.py /data/8/projects/PEDIA/3_simulation/jsons/real/train/1KG/ 1KG -t your_filename.json -o output/1KG
+python pedia.py /projects/PEDIA/3_simulation/jsons/real/train/1KG/ 1KG -t your_filename.json -o output/1KG
 ```
 If you want to test several cases in the same folder, the command for testing is
 ```
-python pedia.py PEDIA/3_simulation/jsons/real/train/1KG/ 1KG -t /data/8/projects/PEDIA/3_simulation/jsons/real/test -o output/1KG
+python pedia.py /projectsPEDIA/3_simulation/jsons/real/train/1KG/ 1KG -t /projects/PEDIA/3_simulation/jsons/real/test -o output/1KG
 ```
 
 The command for 10-fold cross validation is
 ```
-python pedia.py /data/8/projects/PEDIA/3_simulation/jsons/1KG/CV/ 1KG -o ../output/cv/1KG -c 10
+python pedia.py /projects/PEDIA/3_simulation/jsons/1KG/CV/ 1KG -o output/cv/1KG -c 10
 ```
 The command for loocv is
 ```
-python pedia.py /data/8/projects/PEDIA/3_simulation/jsons/1KG/CV/ 1KG -o ../output/loocv/1KG -l
+python pedia.py /projects/PEDIA/3_simulation/jsons/1KG/CV/ 1KG -o output/loocv/1KG -l
 ```
 The command for 10-fold cv and excluding gestalt and feature match score is
 ```
-python pedia.py /data/8/projects/PEDIA/3_simulation/jsons/1KG/CV/ 1KG -o ../output/exclude/1KG -c 10 -e 0_2
+python pedia.py /projects/PEDIA/3_simulation/jsons/1KG/CV/ 1KG -o output/exclude/1KG -c 10 -e 0_2
 ```
 
 ## Snakemake
