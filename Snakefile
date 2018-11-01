@@ -22,10 +22,10 @@ data = expand("CV_{data}/run.log", data=DATA_TYPE)
 
 SAMPLES = config["TEST_SAMPLES"]
 
-classify_file = 'scripts/pedia.py'
-mapping_file = 'scripts/mapping.py'
-mapping_vcf_file = 'scripts/get_variant.py'
-pos_file = 'scripts/allgenepositions.txt'
+classify_file = 'pedia.py'
+mapping_file = 'lib/mapping.py'
+mapping_vcf_file = 'lib/get_variant.py'
+pos_file = 'lib/allgenepositions.txt'
 
 rule all:
     input:

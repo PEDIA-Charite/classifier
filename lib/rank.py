@@ -5,7 +5,7 @@ import numpy as np
 import sys
 import logging
 import csv
-from constants import *
+from lib.constants import *
 
 # Setup logging
 logger = logging.getLogger(__name__)

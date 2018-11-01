@@ -11,13 +11,13 @@ import sys
 import csv
 import argparse
 import logging
-from data import Data
-from classifier import *
-from json_to_table import parse_json
-from json_to_table import parse_json_stdin
-from rank import *
-from version import __version__
-from constants import *
+from lib.data import Data
+from lib.classifier import *
+from lib.json_to_table import parse_json
+from lib.json_to_table import parse_json_stdin
+from lib.rank import *
+from lib.version import __version__
+from lib.constants import *
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -152,9 +152,9 @@ def main():
 
     graph_mode = config_data['graph_mode']
     if graph_mode == GRAPH:
-        from draw import draw_rank
-        from draw import manhattan
-        from draw import manhattan_all
+        from lib.draw import draw_rank
+        from lib.draw import manhattan
+        from lib.draw import manhattan_all
 
     # Parse json files from Training folder and Testing folder
     logger.info("Parse training json files from %s", config_data['train_path'])

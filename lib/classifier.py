@@ -7,7 +7,7 @@ import csv
 from sklearn import preprocessing
 from sklearn.model_selection import LeaveOneGroupOut
 from sklearn.externals import joblib
-from data import Data
+from lib.data import Data
 from sklearn import svm, datasets, ensemble
 from scipy import interp
 from itertools import cycle
@@ -19,8 +19,8 @@ from sklearn.metrics import classification_report
 from sklearn.svm import SVC
 from shutil import copyfile
 import multiprocessing as mp
-from rank import *
-from constants import *
+from lib.rank import *
+from lib.constants import *
 from sklearn.kernel_approximation import RBFSampler
 
 
