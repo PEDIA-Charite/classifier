@@ -71,14 +71,14 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
     if param_fold > 0:
         group = np.array(group)
         best_param = param_tuning(X, y, group, config_data, rand_num)
-        param_c = best_param[0] 
-            
+        param_c = best_param[0]
+
     logger.info("Start training")
     logger.info("Linear SVM with C: %f", param_c)
     clf = svm.LinearSVC(C=param_c, class_weight='balanced', loss='hinge', random_state=rand_num)
     clf.fit(X, y)
     logger.debug("Feature weights %s", str(clf.coef_[0]))
-    
+
     # Classify test set
     logger.info("Start testing")
     pedia = {}
@@ -106,17 +106,28 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
         score = score[sorted_index]
         pathogenicity = pathogenicity[sorted_index]
         gene = gene[sorted_index]
+        test_X = test_X[sorted_index]
         gene_name = gene_name[sorted_index]
         pedia.update({case:[score, pathogenicity, gene, gene_name]})
 
         if mode == NORMAL_MODE:
             filename = path + "/" + case + ".csv"
             with open(filename, 'w') as csvfile:
-                fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'label']
+                fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'FM_score', 'CADD_score', 'gestalt_score', 'boqa_score', 'pheno_score','label']
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                 writer.writeheader()
                 for index in range(len(score)):
-                    writer.writerow({'gene_name': gene_name[index], 'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
+                    writer.writerow({
+                        'gene_name': gene_name[index],
+                        'gene_id': gene[index],
+                        'pedia_score': score[index],
+                        'FM_score': test_X[index][0],
+                        'CADD_score': test_X[index][1],
+                        'gestalt_score': test_X[index][2],
+                        'boqa_score': test_X[index][3],
+                        'pheno_score': test_X[index][4],
+                        'label': pathogenicity[index]
+                        })
             if cv_fold != None:
                 cv_dir = path + "/" + str(cv_fold)
                 if not os.path.exists(cv_dir):
@@ -138,15 +149,14 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
 def param_tuning(X, y, group, config_data, rand_num):
 
     param_fold = config_data['param_fold']
-    
     tuning_set = []
 
     for c in PARAM_C:
         tuning_set.append([c])
     group = np.array(group)
-    
+
     logger.info("Tuning hyper-parameters")
-    
+
     param_acc = []
     for param in tuning_set:
         # Calculate top 1 acc on each param
@@ -158,8 +168,8 @@ def param_tuning(X, y, group, config_data, rand_num):
 
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
-            
-            # Train classifier 
+
+            # Train classifier
             X_features = X_train
             clf = svm.LinearSVC(C=param[0], class_weight='balanced',loss='hinge', random_state=rand_num)
             clf.fit(X_features, y_train)
@@ -199,7 +209,7 @@ def param_tuning(X, y, group, config_data, rand_num):
         index = np.argmin(max_params[:,0])
         best_param = list(max_params[index])
     logger.info("Best parameter C: %f, Top 1 acc: %f", best_param[0], max_acc)
-    
+
                     #filename = path + "/" + case + ".csv"
                     #with open(filename, 'w') as csvfile:
                     #    fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'label']
@@ -242,11 +252,11 @@ def classify_cv(data, path, config_data, rand_num):
         set_default(test, default_value)
         param_sets.append([train, test, path, config_data, fold_count, rand_num])
         fold_count += 1
-    
+
     results = [pool.apply_async(classify, args=(p)) for p in param_sets]
     for result in results:
         pedia.update(result.get())
-    
+
     pool.close()
     pool.join()
 
@@ -282,7 +292,7 @@ def classify_cv_tuning_test(data, path, config_data):
                 os.mkdir(tuning_path)
             param_sets.append([train, test, tuning_path, config_data, fold_count, tuning[0], tuning[1]])
         fold_count += 1
-    
+
     results = [pool.apply_async(classify, args=(p)) for p in param_sets]
     for result in results:
         pedia.update(result.get())
