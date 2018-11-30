@@ -6,6 +6,7 @@ import sys
 import logging
 import csv
 from lib.constants import *
+from collections import Counter
 
 # Setup logging
 logger = logging.getLogger(__name__)
@@ -25,45 +26,45 @@ def rank(pedia, lab, path, config_data=None):
     logger.debug('ranking results based on %s', lab)
 
     mute_flag = False
+
     if config_data:
         mute_flag = True if config_data['param_test'] else False
 
-    # will evalute ranks in range 0 to 101)
+    unknown = False
+    # will evalute ranks in range 0 to 200)
     counts = []
-    filename = path + '/rank_gene_' + lab + ".csv"
+    filename = os.path.join(path, "rank.csv")
     total = len(pedia)
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
         cases = []
-        for i in range(99):
-            count = 0
-            for case in pedia:
-                if pedia[case][1][i] == 1:
-                    count += 1
-                    cases.append(case)
-                    writer.writerow([case, i])
-            counts.append(count)
-        over_100 = {key: pedia[key] for key in pedia if key not in cases}
-        for key in over_100.keys():
-            writer.writerow([key, 99])
-        counts.append(len(over_100))
+        for case in pedia:
+            rank_list = pedia[case].index[pedia[case]['label'] == 1].tolist()
+            if len(rank_list) == 0:
+                break
+            rank = rank_list[0] + 1
+            cases.append(case)
+            writer.writerow([case, rank])
+            counts.append(rank)
         if not mute_flag:
             logger.info("Total: %d", len(pedia))
 
     tmp = 0
 
-    filename = path + '/rank_' + lab + ".csv"
+    filename = os.path.join(path, "count.csv")
+    total_counts = Counter(counts)
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
         rank = 1
-        for count in counts:
-            writer.writerow([rank, count])
-            tmp += count
+        max_count = max(max(total_counts), 11) if total_counts else 11
+        for i in range(1, max_count + 1):
+            writer.writerow([rank, total_counts[i]])
+            tmp += total_counts[i]
             if not mute_flag:
                 if rank == 1:
-                    logger.info('Rank 1: %d', count)
+                    logger.info('Rank 1: %d', total_counts[i])
                 if rank == 10:
-                    logger.info('Rank 2-10: %d', tmp-counts[0])
+                    logger.info('Rank 2-10: %d', tmp-total_counts[0])
             rank += 1
 
 def rank_all_cv(lab, path, repetition):

@@ -22,6 +22,7 @@ import multiprocessing as mp
 from lib.rank import *
 from lib.constants import *
 from sklearn.kernel_approximation import RBFSampler
+import pandas as pd
 
 
 # Setup logging
@@ -96,43 +97,45 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
         test_X = test_X.astype(float)
         X = normalizer.transform(test_X)
         score = clf.decision_function(X)
+        df = pd.DataFrame({
+            'pedia_score': score,
+            'label': test_data[case][1],
+            'gene_symbol': test_data[case][3],
+            'gene_id': test_data[case][2]},
+            )
 
-        score = np.array(score)
-        pathogenicity = np.array(test_data[case][1])
-        gene = np.array(test_data[case][2])
-        gene_name = np.array(test_data[case][3])
-        length = len(score)
-        sorted_index = score.argsort()[::-1][:length]
-        score = score[sorted_index]
-        pathogenicity = pathogenicity[sorted_index]
-        gene = gene[sorted_index]
-        test_X = test_X[sorted_index]
-        gene_name = gene_name[sorted_index]
-        pedia.update({case:[score, pathogenicity, gene, gene_name]})
+        feature_df = pd.DataFrame(
+                test_X,
+                columns=[
+                    'feature_score',
+                    'cadd_score',
+                    'gestalt_score',
+                    'boqa_score',
+                    'pheno_score'
+                    ])
 
+        df = pd.concat([df, feature_df], axis=1)
+        df = df.sort_values('pedia_score', ascending=False)
+        pedia.update({case: df.reset_index(drop=True)})
         if mode == NORMAL_MODE:
-            filename = path + "/" + case + ".csv"
-            with open(filename, 'w') as csvfile:
-                fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'FM_score', 'CADD_score', 'gestalt_score', 'boqa_score', 'pheno_score','label']
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writeheader()
-                for index in range(len(score)):
-                    writer.writerow({
-                        'gene_name': gene_name[index],
-                        'gene_id': gene[index],
-                        'pedia_score': score[index],
-                        'FM_score': test_X[index][0],
-                        'CADD_score': test_X[index][1],
-                        'gestalt_score': test_X[index][2],
-                        'boqa_score': test_X[index][3],
-                        'pheno_score': test_X[index][4],
-                        'label': pathogenicity[index]
-                        })
+            filename = os.path.join(path, case + ".csv")
+            fieldnames = [
+                    'gene_symbol',
+                    'gene_id',
+                    'pedia_score',
+                    'feature_score',
+                    'cadd_score',
+                    'gestalt_score',
+                    'boqa_score',
+                    'pheno_score',
+                    'label'
+                    ]
+            df.to_csv(filename, sep='\t', index=False, columns=fieldnames)
             if cv_fold != None:
                 cv_dir = path + "/" + str(cv_fold)
                 if not os.path.exists(cv_dir):
                     os.mkdir(cv_dir)
-                copyfile(filename, cv_dir + "/" + case + ".csv")
+                copyfile(filename, os.path.join(cv_dir, case + ".csv"))
         else:
             fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'label']
             writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
