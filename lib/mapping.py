@@ -11,8 +11,36 @@ import getopt
 # ===============================
 
 
-if __name__ == '__main__':
+def mapping(filename, newpath, pedia_path, config_data=None):
+    results = []
+    f_prefix = filename.split('/')[-1].split('.')[0]
+    pedia_name = pedia_path
+    pedia = []
+    with open(pedia_name) as csvfile:
+        reader = csv.DictReader(csvfile, delimiter='\t')
+        for row in reader:
+            tmp = {}
+            tmp['cadd_score'] = float(row['cadd_score'])
+            tmp['boqa_score'] = float(row['boqa_score'])
+            tmp['pheno_score'] = float(row['pheno_score'])
+            tmp['feature_score'] = float(row['feature_score'])
+            tmp['gestalt_score'] = float(row['gestalt_score'])
+            tmp['pedia_score'] = float(row['pedia_score'])
+            tmp['gene_id'] = int(row['gene_id'])
+            tmp['gene_symbol'] = row['gene_symbol']
+            pedia.append(tmp)
+    with open(filename) as f:
+        file_content = json.load(f)
 
+    file_content['pedia'] = pedia
+    if config_data:
+        file_content['processing'].append(config_data['command'])
+    # adds the genelist to the json file
+    newjson = open(newpath, "w")
+    json.dump(file_content, newjson)
+    newjson.close()
+
+if __name__ == '__main__':
     opts, args = getopt.getopt(sys.argv[1:], "h::", ["input=", "output=", "pedia="])
     for opt, arg in opts:
         if opt in ("--input"):
@@ -21,24 +49,4 @@ if __name__ == '__main__':
             newpath = arg
         elif opt in ("--pedia"):
             pedia_path = arg
-    results = []
-    defaultfeatures = ["combined_score", "feature_score", "gestalt_score", "has_mask"]
-    f_prefix = filename.split('/')[-1].split('.')[0]
-    pedia_name = pedia_path
-    pedia = {}
-    with open(pedia_name) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            pedia.update({row['gene_id']:row['pedia_score']})
-    file_content = json.load(open(filename))
-    for gene_entry in file_content["geneList"]:
-        gene_id = str(gene_entry['gene_id'])
-        score = pedia[gene_id]
-        gene_entry.update({'pedia_score':score})
-
-    # adds the genelist to the json file
-    submitter = file_content['submitter']
-    submitter_out = {'user_email':submitter['user_email'], 'user_name':submitter['user_name'], 'user_team':submitter['user_team']}
-    file_content['submitter'] = submitter_out
-    newjson = open(newpath, "w")
-    json.dump(file_content, newjson)
+    mapping(filename, newpath, pedia_path)

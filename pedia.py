@@ -142,11 +142,11 @@ def setup_config():
     logger.info("Running mode: %s", running_mode_str)
     param_str = 'Default parameter' if data['param_fold'] == 0 else 'Parameter tuning fold ' + str(data['param_fold'])
     logger.info("%s", param_str)
+    data['command'] = 'pedia command: python ' + ' '.join(sys.argv)
 
     return data
 
 def main():
-
     # Parse input arguments and store in config_data
     config_data = setup_config()
 

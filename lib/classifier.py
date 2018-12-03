@@ -21,6 +21,7 @@ from shutil import copyfile
 import multiprocessing as mp
 from lib.rank import *
 from lib.constants import *
+from lib.mapping import mapping
 from sklearn.kernel_approximation import RBFSampler
 import pandas as pd
 
@@ -119,6 +120,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
         pedia.update({case: df.reset_index(drop=True)})
         if mode == NORMAL_MODE:
             filename = os.path.join(path, case + ".csv")
+            new_json_filename = os.path.join(path, case + ".json")
             fieldnames = [
                     'gene_symbol',
                     'gene_id',
@@ -131,6 +133,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
                     'label'
                     ]
             df.to_csv(filename, sep='\t', index=False, columns=fieldnames)
+            mapping(config_data['test_path'], new_json_filename, filename, config_data)
             if cv_fold != None:
                 cv_dir = path + "/" + str(cv_fold)
                 if not os.path.exists(cv_dir):
