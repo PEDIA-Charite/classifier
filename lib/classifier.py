@@ -132,7 +132,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
                     'pheno_score',
                     'label'
                     ]
-            df.to_csv(filename, sep='\t', index=False, columns=fieldnames)
+            df.to_csv(filename, sep=',', index=False, columns=fieldnames)
             mapping(config_data['test_path'], new_json_filename, filename, config_data)
             if cv_fold != None:
                 cv_dir = path + "/" + str(cv_fold)

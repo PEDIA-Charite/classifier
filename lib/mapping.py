@@ -17,7 +17,7 @@ def mapping(filename, newpath, pedia_path, config_data=None):
     pedia_name = pedia_path
     pedia = []
     with open(pedia_name) as csvfile:
-        reader = csv.DictReader(csvfile, delimiter='\t')
+        reader = csv.DictReader(csvfile, delimiter=',')
         for row in reader:
             tmp = {}
             tmp['cadd_score'] = float(row['cadd_score'])
