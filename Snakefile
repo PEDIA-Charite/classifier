@@ -50,7 +50,7 @@ rule test_unknown:
         train = "../3_simulation/jsons/{data}/CV"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -t {input.json} -g {params.pos_file} -o '{params.dir}';
+        python {classify_file} '{params.train}' '{params.label}' -t {input.json} -o '{params.dir}';
         """
 
 rule map_pedia:
