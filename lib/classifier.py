@@ -101,7 +101,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
         df = pd.DataFrame({
             'pedia_score': score,
             'label': test_data[case][1],
-            'gene_symbol': test_data[case][3],
+            'gene_name': test_data[case][3],
             'gene_id': test_data[case][2]},
             )
 
@@ -122,7 +122,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
             filename = os.path.join(path, case + ".csv")
             new_json_filename = os.path.join(path, case + ".json")
             fieldnames = [
-                    'gene_symbol',
+                    'gene_name',
                     'gene_id',
                     'pedia_score',
                     'feature_score',

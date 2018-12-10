@@ -27,7 +27,7 @@ def mapping(filename, newpath, pedia_path, config_data=None):
             tmp['gestalt_score'] = float(row['gestalt_score'])
             tmp['pedia_score'] = float(row['pedia_score'])
             tmp['gene_id'] = int(row['gene_id'])
-            tmp['gene_symbol'] = row['gene_symbol']
+            tmp['gene_name'] = row['gene_name']
             pedia.append(tmp)
     with open(filename) as f:
         file_content = json.load(f)
