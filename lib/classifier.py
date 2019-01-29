@@ -88,7 +88,6 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
         test_X = []
         score = []
         if filter_feature == None:
-
             [test_X.append(value) for value in test_data[case][0]]
         else:
             for value in test_data[case][0]:
@@ -133,7 +132,11 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
                     'label'
                     ]
             df.to_csv(filename, sep=',', index=False, columns=fieldnames)
-            mapping(config_data['test_path'], new_json_filename, filename, config_data)
+            if config_data['test_path']:
+                json_path = config_data['test_path']
+            else:
+                json_path = os.path.join(config_data['train_path'], str(case) + '.json')
+            mapping(json_path, new_json_filename, filename, config_data)
             if cv_fold != None:
                 cv_dir = path + "/" + str(cv_fold)
                 if not os.path.exists(cv_dir):
