@@ -23,7 +23,7 @@ input_dir =['../../output/publication_simulation_test/1KG/']
 ###############################################################################
 
 outFile.write("\\begin{longtable}[ht]{|c|p{3.4cm}|p{8.4cm}|c|c|}\n")
-outFile.write("\\caption{Comparision of results by using DeepGestalt and PEDIA on DeepGestalt publication test set. The PEDIA rank is the average rank.}\\\\  \\hline\n")
+outFile.write("\\caption*{\\textbf{Supplementary Table 3:} Comparision of results by using DeepGestalt and PEDIA on DeepGestalt publication test set. The PEDIA rank is the average rank.}\\\\  \\hline\n")
 outFile.write("Index&Syndrome Name&Photo Link&DeepGestalt&PEDIA\\\\ \\hline \n")
 
 ############################################################################
@@ -58,7 +58,7 @@ for i in range(df.shape[0]):
     x = df.loc[i]
     if x['PEDIA Rank'] == 0:
         continue
-    outFile.write(str(x['Index']) + "&" + x['Syndrome Name'].replace('\n', ' ') + "&" + x['Links'] + '&' + str(x['DeepGestalt Rank']) + '&' + str(x['PEDIA Rank']) + "\\\\ \\hline \n")
+    outFile.write(str(x['Index']) + "&\\makecell{" + x['Syndrome Name'].replace('\n', ' ') + "}&" + x['Links'] + '&' + str(x['DeepGestalt Rank']) + '&' + str(x['PEDIA Rank']) + "\\\\ \\hline \n")
 
 
 

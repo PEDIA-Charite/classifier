@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import logging
 import csv
+import pandas as pd
 from lib.constants import *
 from collections import Counter
 
@@ -16,14 +17,12 @@ formatter = logging.Formatter('%(asctime)s: %(message)s', datefmt='%m-%d %H:%M')
 console_handle.setFormatter(formatter)
 logger.addHandler(console_handle)
 
-def rank(pedia, lab, path, config_data=None):
+def rank(pedia, path, fold=None, config_data=None):
     """A function to evaluate (rank) the results of the classification and put into a plot.
     only to be used after data was classified."""
 
     # data is what is to be analyzed, it must have the structure of alldatascored in classify()
     # lab is the label of the plot
-
-    logger.debug('ranking results based on %s', lab)
 
     mute_flag = False
 
@@ -33,16 +32,24 @@ def rank(pedia, lab, path, config_data=None):
     unknown = False
     # will evalute ranks in range 0 to 200)
     counts = []
-    filename = os.path.join(path, "rank.csv")
+    if fold:
+        filename = os.path.join(path, "rank_%s.csv" % fold)
+    else:
+        filename = os.path.join(path, "rank.csv")
+
     total = len(pedia)
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
         cases = []
         for case in pedia:
             rank_list = pedia[case].index[pedia[case]['label'] == 1].tolist()
+            df = pedia[case]
+            df['rank'] = df['pedia_score'].rank(method='max',ascending=False)
+            rank_list = df.loc[df['label'] == 1, 'rank']
+            #rank_list = pedia[case].index[pedia[case]['label'] == 1].tolist()
             if len(rank_list) == 0:
                 break
-            rank = rank_list[0] + 1
+            rank = int((rank_list.tolist())[0])
             cases.append(case)
             writer.writerow([case, rank])
             counts.append(rank)
@@ -51,7 +58,10 @@ def rank(pedia, lab, path, config_data=None):
 
     tmp = 0
 
-    filename = os.path.join(path, "count.csv")
+    if fold:
+        filename = os.path.join(path, "count_%s.csv" % fold)
+    else:
+        filename = os.path.join(path, "count.csv")
     total_counts = Counter(counts)
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
@@ -64,7 +74,7 @@ def rank(pedia, lab, path, config_data=None):
                 if rank == 1:
                     logger.info('Rank 1: %d', total_counts[i])
                 if rank == 10:
-                    logger.info('Rank 2-10: %d', tmp-total_counts[0])
+                    logger.info('Rank 2-10: %d', tmp-total_counts[1])
             rank += 1
 
 def rank_all_cv(lab, path, repetition):
@@ -78,21 +88,22 @@ def rank_all_cv(lab, path, repetition):
 
     tmp = 0
     total = []
-    for idx in range(100):
-        total.append(0)
+    total_df = []
+    max_row = 0
     for idx in range(repetition):
-        filename = path + '/cv_' + str(idx) + '/rank_' + lab + ".csv"
-        with open(filename, 'r') as csvfile:
-            reader = csv.reader(csvfile)
-            count = 0
-            rank = []
-            for row in reader:
-                total[count] += int(row[1])
-                count += 1
+        filename = path + '/cv_' + str(idx) + '/count.csv'
+        data = pd.read_csv(filename, header=None)
+        total_df.append(data)
+        if data.shape[0] > max_row:
+            max_row = data.shape[0]
+    x = np.zeros(max_row)
+    df = pd.DataFrame(x)
+    for i in range(0, repetition):
+        df[0] = df[0] + total_df[i][1]
 
-
+    total = df[0]
     avg = [x / repetition for x in total]
-    filename = path + '/rank_' + lab + ".csv"
+    filename = path + '/count.csv'
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
         rank = 1
