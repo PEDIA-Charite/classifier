@@ -35,7 +35,6 @@ console_handle.setFormatter(formatter)
 logger.addHandler(console_handle)
 
 def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1, param_g=None, param_c=None):
-    #    param_fold, mode=NORMAL_MODE, filter_feature=None, cv_fold=None, tuning=None):
     """ SVM classification of all samples in the instance of Data against a given training
     data set that is also an instance of class Data """
 
@@ -43,7 +42,6 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
 
     param_fold = config_data['param_fold']
     filter_feature = config_data['exclude_feature']
-    mode = config_data['running_mode']
 
     X = []
     y = []
@@ -54,6 +52,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
             [X.append(value) for value in train_data[case][0]]
         else:
             for value in train_data[case][0]:
+                # select inverse index of filter_feature
                 X.append(value[~np.in1d(range(len(value)), filter_feature)])
         for value in train_data[case][1]:
             y.append(value)
@@ -93,67 +92,73 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
             for value in test_data[case][0]:
                 test_X.append(value[~np.in1d(range(len(value)), filter_feature)])
 
-        test_X = np.array(test_X)
-        test_X = test_X.astype(float)
+        test_X = np.array(test_X).astype(float)
         X = normalizer.transform(test_X)
         score = clf.decision_function(X)
-        df = pd.DataFrame({
-            'pedia_score': score,
-            'label': test_data[case][1],
-            'gene_name': test_data[case][3],
-            'gene_id': test_data[case][2]},
-            )
 
-        feature_df = pd.DataFrame(
-                test_X,
-                columns=[
-                    'feature_score',
-                    'cadd_score',
-                    'gestalt_score',
-                    'boqa_score',
-                    'pheno_score'
-                    ])
-
-        df = pd.concat([df, feature_df], axis=1)
-        df = df.sort_values('pedia_score', ascending=False)
+        # Manage pedia results by dataframe and store in filename
+        df = pedia_df(score, test_data, test_X, case, filter_feature)
         pedia.update({case: df.reset_index(drop=True)})
-        if mode == NORMAL_MODE:
-            filename = os.path.join(path, case + ".csv")
-            new_json_filename = os.path.join(path, case + ".json")
-            fieldnames = [
-                    'gene_name',
-                    'gene_id',
-                    'pedia_score',
-                    'feature_score',
-                    'cadd_score',
-                    'gestalt_score',
-                    'boqa_score',
-                    'pheno_score',
-                    'label'
-                    ]
-            df.to_csv(filename, sep=',', index=False, columns=fieldnames)
-            if config_data['test_path']:
-                json_path = config_data['test_path']
+        filename = os.path.join(path, case + ".csv")
+        new_json_filename = os.path.join(path, case + ".json")
+        write_df_to_csv(df, filename)
+        if config_data['test_path']:
+            if os.path.isdir(config_data['test_path']):
+                json_path = os.path.join(config_data['test_path'], str(case) + '.json')
             else:
-                json_path = os.path.join(config_data['train_path'], str(case) + '.json')
-            mapping(json_path, new_json_filename, filename, config_data)
-            if cv_fold != None:
-                cv_dir = path + "/" + str(cv_fold)
-                if not os.path.exists(cv_dir):
-                    os.mkdir(cv_dir)
-                copyfile(filename, os.path.join(cv_dir, case + ".csv"))
+                json_path = config_data['test_path']
         else:
-            fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'label']
-            writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
-            writer.writeheader()
-            for index in range(len(score)):
-                writer.writerow({'gene_name': gene_name[index], 'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
+            json_path = os.path.join(config_data['train_path'], str(case) + '.json')
+        # Append pedia results to original JSON file, then store in new_json_filename
+        mapping(json_path, new_json_filename, filename, config_data)
 
     if cv_fold != None:
-        rank(pedia, str(cv_fold), path)
+        rank(pedia, path, str(cv_fold))
 
     return pedia
 
+def write_df_to_csv(df, filename):
+    fieldnames = [
+            'gene_name',
+            'gene_id',
+            'pedia_score',
+            'feature_score',
+            'cadd_score',
+            'gestalt_score',
+            'boqa_score',
+            'pheno_score',
+            'label'
+            ]
+    df.to_csv(filename, sep=',', index=False, columns=fieldnames)
+
+def pedia_df(score, test_data, test_X, case, filter_feature):
+    df = pd.DataFrame({
+        'pedia_score': score,
+        'label': test_data[case][1],
+        'gene_name': test_data[case][3],
+        'gene_id': test_data[case][2]},
+        )
+
+    column_names = np.array([
+        'feature_score',
+        'cadd_score',
+        'gestalt_score',
+        'boqa_score',
+        'pheno_score'
+        ])
+
+    feature_df = pd.DataFrame(
+            test_X,
+            columns=column_names[~np.in1d(range(column_names.shape[0]), filter_feature)]
+            )
+
+    if filter_feature == None:
+        filter_feature = []
+    for idx in filter_feature:
+        feature_df[column_names[idx]] = None
+    df = pd.concat([df, feature_df], axis=1)
+    df = df.sort_values('pedia_score', ascending=False)
+    return df
 
 def param_tuning(X, y, group, config_data, rand_num):
 
@@ -219,14 +224,6 @@ def param_tuning(X, y, group, config_data, rand_num):
         best_param = list(max_params[index])
     logger.info("Best parameter C: %f, Top 1 acc: %f", best_param[0], max_acc)
 
-                    #filename = path + "/" + case + ".csv"
-                    #with open(filename, 'w') as csvfile:
-                    #    fieldnames = ['gene_name', 'gene_id', 'pedia_score', 'label']
-                    #    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                    #    writer.writeheader()
-                    #    for index in range(len(score)):
-                    #        writer.writerow({'gene_name': gene_name[index], 'gene_id': gene[index], 'pedia_score': score[index], 'label': pathogenicity[index]})
-
     return best_param
 
 def classify_test(train, test, path, config_data):
@@ -239,8 +236,14 @@ def classify_test(train, test, path, config_data):
     return pedia
 
 def classify_cv(data, path, config_data, rand_num):
+    sample_names = np.array(list(data.keys()))
+    genes = []
+    for name in sample_names:
+        gene_idx, = np.where(data[name][Data.LABEL_IDX] == 1)
+        genes.append(np.array(data[name][Data.GENE_IDX])[gene_idx].tolist()[0])
 
-    kf = KFold(n_splits=config_data['cv_fold'], shuffle=True, random_state=rand_num)
+    #kf = KFold(n_splits=config_data['cv_fold'], shuffle=True, random_state=rand_num)
+    kf = GroupKFold(n_splits=config_data['cv_fold'])
     sample_names = np.array(list(data.keys()))
 
     fold_count = 1
@@ -248,10 +251,14 @@ def classify_cv(data, path, config_data, rand_num):
     pedia = {}
     param_sets = []
     pool = mp.Pool(processes = config_data['cv_cores'])
-    for train_idx, test_idx in kf.split(sample_names):
+    csvfile = open(os.path.join(path, 'cv_group.csv'), 'w')
+    csvwriter = csv.writer(csvfile, delimiter=',')
+    for train_idx, test_idx in kf.split(sample_names, groups=genes):
         logger.info("Start fold %d", fold_count)
         train_keys = sample_names[train_idx]
         test_keys = sample_names[test_idx]
+        for key in test_keys:
+            csvwriter.writerow([key, fold_count])
 
         train = {key:data[key] for key in train_keys}
         test = {key:data[key] for key in test_keys}
@@ -261,6 +268,7 @@ def classify_cv(data, path, config_data, rand_num):
         set_default(test, default_value)
         param_sets.append([train, test, path, config_data, fold_count, rand_num])
         fold_count += 1
+    csvfile.close()
 
     results = [pool.apply_async(classify, args=(p)) for p in param_sets]
     for result in results:
@@ -319,7 +327,6 @@ def classify_loocv(data, path, config_data, rand_num):
         genes.append(np.array(data[name][Data.GENE_IDX])[gene_idx].tolist()[0])
 
     logo = LeaveOneGroupOut()
-
     fold_count = 1
     pedia = {}
 
