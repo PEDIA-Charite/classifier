@@ -12,9 +12,11 @@ subworkflow pub_sim_workflow:
     workdir: "../3_simulation/publication_simulation"
     snakefile: "../3_simulation/publication_simulation/Snakefile"
 
-DATA_TYPE = ["1KG", "IRAN"]
-FEATURE = ["0", "1", "2", "3", "4", "0_3", "0_4", "1_2", "0_2_3", 
-           "3_4", "0_3_4", "0_2_3_4", "0_1_3_4"]
+DATA_TYPE = ["1KG"]
+FEATURE = ["0", "1", "2", "3", "4",
+           "0_1", "0_2", "0_3", "0_4", "1_2", "1_3", "1_4", "2_3", "2_4", "3_4",
+		   "0_1_2", "0_1_3", "0_1_4", "0_2_3", "0_2_4", "0_3_4", "1_2_3", "1_2_4", "1_3_4", "2_3_4",
+		   "0_2_3_4", "0_1_3_4", "1_2_3_4", "0_1_2_4", "0_1_2_3"]
 
 RUN = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -124,7 +126,7 @@ rule publication_simulation_test:
         test = "../3_simulation/publication_simulation/REP_{run}/jsons/{background}/CV/"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -g {params.pos_file} -o '{params.dir}' -p 5;
+        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -o '{params.dir}' -p 5;
         """
 
 rule publication_simulation_test_all:
@@ -284,7 +286,7 @@ rule CV_g:
         train = "../3_simulation/jsons/{data}/CV_gestalt/"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -c 10 -g {params.pos_file}  -o '{params.dir}' --cv-rep 10 --cv-cores 5 -p 5;
+        python {classify_file} '{params.train}' '{params.label}' -c 10 -o '{params.dir}' --cv-rep 1 --cv-cores 5 -p 5;
         """
 
 rule CV_all_g:
@@ -309,7 +311,7 @@ rule LOOCV_g:
         train = "../3_simulation/jsons/{data}/CV_gestalt/"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -l -g {params.pos_file} -o '{params.dir}' --cv-cores 5 -p 5 ;
+        python {classify_file} '{params.train}' '{params.label}' -l -o '{params.dir}' --cv-cores 5 -p 5 ;
         """
 
 rule LOOCV_all_g:
@@ -319,13 +321,38 @@ rule LOOCV_all_g:
         touch("output/loocv_g/LOOCV_all.log")
 
 ###########################################################################
+# Perform LOOCV on cases with gestalt support by using different
+# scores
+###########################################################################
+
+rule LOOCV_exclude_g:
+    input:
+    output:
+        "output/exclude_g/LOOCV_{data}_e_{exclude}/run.log"
+    params:
+        label = "{data}",
+        dir = "output/exclude_g/LOOCV_{data}_e_{exclude}",
+        pos_file = pos_file,
+        exclude_feature = "{exclude}",
+        train = "../3_simulation/jsons/{data}/CV_gestalt/"
+    shell:
+        """
+        python {classify_file} {params.train} {params.label} -l -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5 ;
+        """
+
+rule LOOCV_exclude_all_g:
+    input:
+        expand("output/exclude_g/LOOCV_{data}_e_{exclude}/run.log", data=DATA_TYPE, exclude=FEATURE)
+    output:
+        touch("output/exclude_g/LOOCV_exclude_all.log")
+
+###########################################################################
 # Perform 10 fold CV on cases with gestalt support by using different
 # scores
 ###########################################################################
 
 rule CV_exclude_g:
     input:
-        sum_file = sim_workflow("performanceEvaluation/data/CV_gestalt/{data}.csv")
     output:
         "output/exclude_g/CV_{data}_e_{exclude}/run.log"
     params:
@@ -336,7 +363,7 @@ rule CV_exclude_g:
         train = "../3_simulation/jsons/{data}/CV_gestalt/"
     shell:
         """
-        python {classify_file} {params.train} {params.label} -c 10 -g {params.pos_file} -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5 --cv-rep 10 ;
+        python {classify_file} {params.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5 --cv-rep 1 ;
         """
 
 rule CV_exclude_all_g:
