@@ -1,0 +1,94 @@
+\documentclass[11pt]{article}
+\usepackage{url}
+\usepackage{color,rotating,epic,subfigure,amssymb,cite,amscd,amsmath,multirow,bm,url,rotating}
+\usepackage[margin=2cm]{geometry}
+\usepackage{authblk}
+
+\usepackage{graphicx,epstopdf}
+\usepackage{multirow,threeparttable, makecell}
+\usepackage{amssymb, siunitx}
+\usepackage{amsthm}
+\usepackage{epsfig}
+\usepackage{cite}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usepackage{longtable}
+%\usepackage{gantt}
+\usetikzlibrary{arrows,decorations.pathmorphing,backgrounds,fit,positioning,shapes.symbols,chains}
+\usetikzlibrary{positioning}
+\usepackage{tikz-qtree}
+\usepackage{caption}
+%\usepackage[format=plain,
+%            labelfont={bf,it},
+%            textfont=it]{caption}
+
+%\renewcommand{\tableshortname}{Supplementary Table}
+\newcommand{\beginsupplement}{%
+        \setcounter{table}{1}
+        \setcounter{figure}{0}
+        \renewcommand{\thefigure}{Supplementary \arabic{figure}}%
+     }
+     
+
+\begin{document}
+\title{\textbf{Prioritization of Exome Data by Image Analysis \\ Supplementary Material}}
+\author[1, 2]{Hsieh, Tzung-Chien \textsuperscript{*}}
+\author[2, 3]{Mensah, Martin-Atta \textsuperscript{*}}
+\author[2, 3]{Pantel, Jean Tori}
+\author[]{PEDIA consortium}
+\author[1]{Krawitz, Peter}
+\affil[1]{\footnotesize Institute of Genomic Statistics and Bioinformatics, 
+  University of Bonn, Bonn, Germany}
+\affil[2]{\footnotesize Charité –Universitätsmedizin Berlin, corporate
+  member of Freie Universität Berlin, Humboldt-Universität zu Berlin,
+  and Berlin Institute of Health, Institute of Medical Genetics and
+  Human Genetics, Berlin, Germany }
+\affil[3]{\footnotesize Berlin Institute ofHealth (BIH), Anna-Louisa-Karsch 2, 10178
+  Berlin, German}
+\date{}
+\maketitle
+\clearpage
+
+\beginsupplement
+The influence of the ethnic background on the performance of the PEDIA approach was analyzed by spiking in the disease-causing mutations into the different populations of the 1000 genomes project (ACB, African Caribbeans in Barbados; ASW Americans of African Ancestry in SW USA; BEB, Bengali from Bangladesh; CDX, Chinese Dai in Xishuangbanna, China; CEU Western European Ancestry; CHBHan Chinese in Beijing, China; CHS, Southern Han Chinese; CLM, Colombians from Medellin, Colombia; ESN, Esan in Nigeria; FIN, Finnish in Finland; GBR, British in England Scotland; GIH, Gujarati Indian from Houston Texas; GWD, Gambian in Western Divisions in the Gambia; IBS, Iberian Population in Spain; ITU, Indian Telugu from the UK; JPT, Japanese in Tokyo, Japan; KHV, Kinh in Ho Chi Minh City, Vietnam; LWK, Luhya in Webuye, Kenya; MSL, Mende in Sierra Leone; MXL, Mexican Ancestry from Los Angeles USA; PEL, Peruvians from lima, Peru; PJL, Punjabi from Lahore, Pakistan; PUR, Puerto Ricans from Puerto Rico; STU, Sri Lankan Tamil from the UK; TSI, Toscani in Italia; YRI, Yoruba in Ibadan, Nigeria).
+
+\begin{figure}[ht]
+  \begin{center}
+    \graphicspath{{./figures/}}
+    \begin{tabular}{c}
+      \includegraphics[width=18 cm, height= 9 cm]{population_variants_num.png}
+    \end{tabular}
+  \caption*{\textbf{Supplementary Figure 1:} The number of variants that are called in reference-guided exome sequencing varies depending on the ethnic background. Filtering according to Wright, et al., results in 100 to 400 rare variants, with the smallest numbers observed in individuals from Finland and the largest in individuals from Kenya.}
+  \end{center}
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{center}
+    \graphicspath{{./figures/}}
+    \begin{tabular}{c}
+      \includegraphics[width=18 cm, height= 9 cm]{population_cadd.png}
+    \end{tabular}
+  \caption*{\textbf{Supplementary Figure 2:} The distribution of CADD scores is less dependent on the ethnic background. In all populations there is a shift in the median of the CADD scores after filtering for rare variants.}
+  \end{center}
+\end{figure}
+
+\begin{figure}[ht]
+  \begin{center}
+    \graphicspath{{./figures/}}
+    \begin{tabular}{c}
+      \includegraphics[width=18 cm, height= 9 cm]{population_rank.png}
+    \end{tabular}
+  \caption*{\textbf{Supplementary Figure 3:} The disease-causing
+mutations of the PEDIA cohort have been spiked into randomly selected
+samples from the 1KGP project. Shown are the results of one such
+simulation. The mean rank that the disease-causing gene achieves, does
+not depend on the ethnic background. The phenotypic and molecular data
+of poorly performing examples, e.g. cases 155728 and 246245 (see
+Supplementary Table 1 for details) yield lowest ranks in all population.}
+  \end{center}
+\end{figure}
+\input{table/acc_result.tex}
+\clearpage
+\footnotesize
+\input{table/acc_pub_test.tex}
+\end{document}
