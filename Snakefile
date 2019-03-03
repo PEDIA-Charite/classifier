@@ -49,7 +49,7 @@ rule test_unknown:
         label = "{data}",
         dir = "output/test/{data}/{sample}",
         pos_file = pos_file,
-        train = "../3_simulation/jsons/{data}/CV"
+        train = "../3_simulation/jsons/{data}/CV_gestalt"
     shell:
         """
         python {classify_file} '{params.train}' '{params.label}' -t {input.json} -o '{params.dir}';
