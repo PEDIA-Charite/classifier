@@ -19,35 +19,27 @@ For the following parameters, you should assign exact one parameter to specify w
 
 * -c fold number. This parameter enables k-fold cross validation (default 10).
 
+* -p how many fold use in parameter tuning. If it is not set, we use the defult parameter C.
+
+* --cv-cores Cores using in cross validation, default 5
+
 * -l Flag enables leave one group out cross validation. The grouping is based on the mutation gene.
 
 The optional parameters are:
 
 * -e feature. Exclude specific features. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.
 
-* -g Flag enables drawing manhattan plots and ranking plot
-
-* -s Flag enables server mode. This flag is for running on server.
-
 * -f feature. Filter cases which don't have specific features in pathogenic mutation gene. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. We only support using one feature.
 
-If you want to run on server, the testing json file is from stdin, and the output pedia score is to stdout.
-Hence, you don't need to use -t in server mode. The following command is the example for running on server.
-```
-cat PEDIA/3_simulation/json_simulation/1KG/CV/131037.json | python pedia.py PEDIA/3_simulation/json_simulation/real/train/1KG/ 1KG -s > pedia_score.csv
-```
-The pedia score for this json file is in pedia_score.csv
-
+## Download training data
+* You could download the training data we used in PEDIA paper in the following link (https://pedia-study.org/pedia_services/download)
+* jsons/1KG/CV_gestalt/* .json could be use for training the model
 
 ## Example:
 Execute the following command. The output will be in output/ directory.
 If you want to prioritize one case, then typing the file name in testing argument.
 ```
-python pedia.py /projects/PEDIA/3_simulation/jsons/real/train/1KG/ 1KG -t your_filename.json -o output/1KG
-```
-If you want to test several cases in the same folder, the command for testing is
-```
-python pedia.py /projectsPEDIA/3_simulation/jsons/real/train/1KG/ 1KG -t /projects/PEDIA/3_simulation/jsons/real/test -o output/1KG
+python pedia.py jsons/1KG/CV/ 1KG -t your_filename.json -o output/1KG
 ```
 
 The command for 10-fold cross validation is
