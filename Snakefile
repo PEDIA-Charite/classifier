@@ -42,12 +42,12 @@ rule all:
 rule test_unknown:
     input:
         #train = sim_workflow("performanceEvaluation/data/CV/{data}.csv"),
-        json = sim_workflow("jsons/real/unknown_test/{sample}.json")
+        json = sim_workflow("jsons/real/unknown_test/{lab}/{sample}.json")
     output:
-        csv = "output/test/{data}/{sample}/{sample}.csv"
+        csv = "output/test/{data}/{lab}/{sample}/{sample}.csv"
     params:
         label = "{data}",
-        dir = "output/test/{data}/{sample}",
+        dir = "output/test/{data}/{lab}/{sample}",
         pos_file = pos_file,
         train = "../3_simulation/jsons/{data}/CV"
     shell:
@@ -57,13 +57,13 @@ rule test_unknown:
 
 rule map_pedia:
     input:
-        csv = "output/test/{data}/{sample}/{sample}.csv",
-        json = sim_workflow("jsons/real/unknown_test/{sample}.json")
+        csv = "output/test/{data}/{lab}/{sample}/{sample}.csv",
+        json = sim_workflow("jsons/real/unknown_test/{lab}/{sample}.json")
     output:
-        json = "output/test/{data}/{sample}/{sample}_pedia.json",
+        json = "output/test/{data}/{lab}/{sample}/{sample}_pedia.json",
     params:
         label = "{data}",
-        dir = "output/test/{data}/{sample}/"
+        dir = "output/test/{data}/{lab}/{sample}/"
     shell:
         """
         python {mapping_file} --input '{input.json}' --pedia '{input.csv}' --output '{output.json}';
@@ -71,13 +71,13 @@ rule map_pedia:
 
 rule map_vcf:
     input:
-        csv = "output/test/{data}/{sample}/{sample}.csv",
-        vcf = vcf_workflow("annotated_vcfs/{sample}_annotated.vcf.gz")
+        csv = "output/test/{data}/{lab}/{sample}/{sample}.csv",
+        vcf = vcf_workflow("annotated_vcfs/{lab}/{sample}_annotated.vcf.gz")
     output:
-        vcf = "output/test/{data}/{sample}/{sample}.vcf.gz",
+        vcf = "output/test/{data}/{lab}/{sample}/{sample}.vcf.gz",
     params:
         label = "{data}",
-        dir = "output/test/{data}/{sample}/"
+        dir = "output/test/{data}/{lab}/{sample}/"
     shell:
         """
         python {mapping_vcf_file} --input '{input.vcf}' --pedia '{input.csv}' --output '{output.vcf}';
@@ -85,13 +85,13 @@ rule map_vcf:
 
 rule map:
     input:
-        vcf = "output/test/{data}/{sample}/{sample}.vcf.gz",
-        json = "output/test/{data}/{sample}/{sample}_pedia.json",
+        vcf = "output/test/{data}/{lab}/{sample}/{sample}.vcf.gz",
+        json = "output/test/{data}/{lab}/{sample}/{sample}_pedia.json",
     output:
-        out = touch("output/test/{data}/{sample}/run.out")
+        out = touch("output/test/{data}/{lab}/{sample}/run.out")
     params:
         label = "{data}",
-        dir = "output/test/{data}/{sample}/"
+        dir = "output/test/{data}/{lab}/{sample}/"
 
 rule map_all:
     input:
