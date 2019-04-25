@@ -39,7 +39,7 @@ def parse_arguments(parser):
     parser.add_argument('--param-c', type=float, default=1, help='Parameter C of SVM, default: 1')
     parser.add_argument('--param-g', type=float, default=0.25, help='Parameter G of SVM, default: 0.25')
     parser.add_argument('--param-test', action='store_true', help='Enable parameter testing mode')
-    parser.add_argument('--cv-rep', type=int, default=10, help='Repitiotion of k-fold CV experiment, default 10')
+    parser.add_argument('--cv-rep', type=int, default=1, help='Repitiotion of k-fold CV experiment, default 1')
     parser.add_argument('--cv-cores', type=int, default=5, help='Cores using in cross validation, default 5')
 
     return parser.parse_args()

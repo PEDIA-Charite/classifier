@@ -114,19 +114,17 @@ rule map_all:
 
 rule publication_simulation_test:
     input:
-        train = pub_sim_workflow("{background}_{run}_train.log"),
-        test = pub_sim_workflow("{background}_{run}_test.log")
+        train = "../3_simulation/publication_simulation/REP_{run}/jsons/{background}/train/",
+        test = "../3_simulation/publication_simulation/REP_{run}/jsons/{background}/test/"
     output:
         csv = "output/publication_simulation_test/{background}/REP_{run}/run.log"
     params:
         label = "{background}",
         dir = "output/publication_simulation_test/{background}/REP_{run}",
         pos_file = pos_file,
-        train = "../3_simulation/publication_simulation/REP_{run}/jsons/{background}/train/",
-        test = "../3_simulation/publication_simulation/REP_{run}/jsons/{background}/CV/"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -t {params.test} -o '{params.dir}' -p 5;
+        python {classify_file} '{input.train}' '{params.label}' -t {input.test} -o '{params.dir}' -p 5;
         """
 
 rule publication_simulation_test_all:
@@ -207,7 +205,7 @@ rule CV:
         train = "../3_simulation/jsons/{data}/CV/"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -c 10 -g {params.pos_file} -o '{params.dir}' -p 5 --cv-rep 10;
+        python {classify_file} '{params.train}' '{params.label}' -c 10 -o '{params.dir}' --cv-rep 1 --cv-cores 5 -p 5;
         """
 
 rule CV_all:
