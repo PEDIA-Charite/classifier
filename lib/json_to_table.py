@@ -67,7 +67,7 @@ def parse_json(input_dir, outputfile):
                 gene = data["genomicData"][0]["Test Information"]["Gene ID"]
 
         for entry in data['geneList']:
-            if int(entry["gene_id"]) == gene:
+            if int(entry["gene_id"]) == int(gene):
                 label = 1
                 found = True
             else:
@@ -114,7 +114,7 @@ def parse_json_stdin(outputfile):
     gene = data["genomicData"][0]["Test Information"]["Gene ID"]
 
     for entry in data['geneList']:
-        if int(entry["gene_id"]) == gene:
+        if int(entry["gene_id"]) == int(gene):
             label = 1
             found = True
         else:
