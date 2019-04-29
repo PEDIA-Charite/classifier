@@ -195,7 +195,7 @@ rule test_all:
 
 rule CV:
     input:
-        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
+        #sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
         "output/cv/CV_{data}/run.log"
     params:
@@ -223,7 +223,7 @@ rule CV_all:
 
 rule CV_exclude:
     input:
-        sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
+        #sum_file = sim_workflow("performanceEvaluation/data/CV/{data}.csv")
     output:
         "../output/exclude/CV_{data}_e_{exclude}/run.log"
     params:
@@ -234,7 +234,7 @@ rule CV_exclude:
         train = "../3_simulation/jsons/{data}/CV/"
     shell:
         """
-        python {classify_file} {params.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5 --cv-rep 10;
+        python {classify_file} {params.train} {params.label} -c 10 -e {params.exclude_feature} -o {params.dir} --cv-cores 5 -p 5;
         """
 
 rule CV_exclude_all:
