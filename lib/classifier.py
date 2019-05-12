@@ -360,7 +360,8 @@ def get_feature_default(data):
     feature_dim = next(iter(data.values()))[Data.FEATURE_IDX].shape[1]
     for index in range(feature_dim):
         feature_value = np.concatenate([data[case][Data.FEATURE_IDX][:, index] for case in data], axis=0)
-        m = round(np.nanmin(feature_value.astype(np.float)), 10)
+        #m = round(np.nanmin(feature_value.astype(np.float)), 10)
+        m = 0.0
         features_default.append(m)
     return features_default
 
