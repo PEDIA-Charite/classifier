@@ -48,7 +48,7 @@ def rank(pedia, path, fold=None, config_data=None):
             rank_list = df.loc[df['label'] == 1, 'rank']
             #rank_list = pedia[case].index[pedia[case]['label'] == 1].tolist()
             if len(rank_list) == 0:
-                break
+                continue
             rank = int((rank_list.tolist())[0])
             cases.append(case)
             writer.writerow([case, rank])
