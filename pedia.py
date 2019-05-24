@@ -11,6 +11,7 @@ import sys
 import csv
 import argparse
 import logging
+import pickle
 from lib.data import Data
 from lib.classifier import *
 from lib.json_to_table import parse_json
@@ -41,6 +42,7 @@ def parse_arguments(parser):
     parser.add_argument('--param-test', action='store_true', help='Enable parameter testing mode')
     parser.add_argument('--cv-rep', type=int, default=1, help='Repitiotion of k-fold CV experiment, default 1')
     parser.add_argument('--cv-cores', type=int, default=5, help='Cores using in cross validation, default 5')
+    parser.add_argument('--train-pickle', help='Pickle file of preprocessed training data. When use this flag, we only load training data from this file and ignore the train_path.')
 
     return parser.parse_args()
 
@@ -66,6 +68,7 @@ def setup_config():
     data['kernel'] = args.kernel
     data['cv_cores'] = args.cv_cores
     data['param_test'] = args.param_test
+    data['train_pickle'] = args.train_pickle
 
     # Create output folder if not exist
     if not os.path.exists(data['output_path']):
@@ -131,6 +134,9 @@ def setup_config():
 
     logger.debug("Command: %s", str(args))
     logger.info("Input directory: %s", data['train_path'])
+    if data['train_pickle']:
+        logger.info("Input train pickle used: %s, training data in input directory will be ignored.",
+                data['train_pickle'])
     logger.info("Output directory: %s", data['output_path'])
     logger.info("Exclude features: %s", str(data['filter_feature']))
     logger.info("Using kernel: %s", str(data['kernel']))
@@ -159,9 +165,11 @@ def main():
     # Parse json files from Training folder and Testing folder
     logger.info("Parse training json files from %s", config_data['train_path'])
     train_path = config_data['train_path']
+    train_pickle = config_data['train_pickle']
     train_file = config_data['train_file']
     train_label = config_data['train_label']
-    parse_json(train_path, train_file)
+    if not train_pickle:
+        parse_json(train_path, train_file)
 
 
     mode = config_data['mode']
@@ -181,7 +189,11 @@ def main():
     # Load training data and testing data
     train_data = Data()
     filter_feature = config_data['filter_feature']
-    train_data.loadData(train_file, filter_feature)
+    if train_pickle:
+        with open(train_pickle, 'rb') as f:
+            train_data = pickle.load(f)
+    else:
+        train_data.loadData(train_file, filter_feature)
 
 
     # Train classifier by training set and test on testing set

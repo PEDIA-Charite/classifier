@@ -52,7 +52,7 @@ rule test_unknown:
         train = "../3_simulation/jsons/{data}/CV"
     shell:
         """
-        python {classify_file} '{params.train}' '{params.label}' -t {input.json} -o '{params.dir}';
+        python {classify_file} '{params.train}' '{params.label}' -t {input.json} -o '{params.dir}' --param-c 0.015625;
         """
 
 rule map_pedia:
