@@ -138,7 +138,7 @@ def setup_config():
         logger.info("Input train pickle used: %s, training data in input directory will be ignored.",
                 data['train_pickle'])
     logger.info("Output directory: %s", data['output_path'])
-    logger.info("Exclude features: %s", str(data['filter_feature']))
+    logger.info("Exclude features: %s", str(data['exclude_feature']))
     logger.info("Using kernel: %s", str(data['kernel']))
 
     running_mode_str = "Normal"
