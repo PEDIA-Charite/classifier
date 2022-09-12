@@ -9,4 +9,4 @@ dependencies:
  - numpy
  - scikit-learn
  - matplotlib
- - curl=7.45.0
+ - curl

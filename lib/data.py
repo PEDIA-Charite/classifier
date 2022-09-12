@@ -28,6 +28,7 @@ class Data:
     GESTALT_IDX = 2
     BOQA_IDX = 3
     PHENO_IDX = 4
+    CADA_IDX = 5
 
     # FEATURE_IDX is for feature vector which contain the above feature score
     # LABEL_IDX is for pathogenic gene label (0, 1)
@@ -40,7 +41,8 @@ class Data:
     def __init__(self):
         self.data = {}
         # Filter dict
-        self.filter_dict = {0: "feature_score", 1: "cadd_phred_score", 2: "gestalt_score", 3: "boqa_score", 4: "pheno_score"}
+        self.filter_dict = {0: "feature_score", 1: "cadd_score", 2: "gestalt_score",
+                            3: "boqa_score", 4: "pheno_score", 5: "cada_score"}
 
     def loadData(self, input_file, filter_field=None):
         filter_cases = []
@@ -57,7 +59,8 @@ class Data:
                 gene = self.data[case][self.GENE_IDX]
                 gene_name = self.data[case][self.GENE_NAME_IDX]
 
-                x.append([row["feature_score"], row["cadd_phred_score"], row["gestalt_score"], row["boqa_score"], row["pheno_score"]])
+                x.append([row["feature_score"], row["cadd_score"], row["gestalt_score"],
+                          row["boqa_score"], row["pheno_score"], row["cada_score"]])
                 y.append(int(row["label"]))
                 gene.append(row["gene_id"])
                 gene_name.append(row["gene_symbol"])

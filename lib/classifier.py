@@ -6,7 +6,7 @@ import logging
 import csv
 from sklearn import preprocessing
 from sklearn.model_selection import LeaveOneGroupOut
-from sklearn.externals import joblib
+import joblib
 from lib.data import Data
 from sklearn import svm, datasets, ensemble
 from scipy import interp
@@ -127,6 +127,7 @@ def write_df_to_csv(df, filename):
             'gestalt_score',
             'boqa_score',
             'pheno_score',
+            'cada_score',
             'label'
             ]
     df.to_csv(filename, sep=',', index=False, columns=fieldnames)
@@ -144,7 +145,8 @@ def pedia_df(score, test_data, test_X, case, filter_feature):
         'cadd_score',
         'gestalt_score',
         'boqa_score',
-        'pheno_score'
+        'pheno_score',
+        'cada_score'
         ])
 
     feature_df = pd.DataFrame(

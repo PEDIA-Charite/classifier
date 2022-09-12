@@ -28,7 +28,8 @@ class Sample(object):
         extom: an attribute to hold the extom score based on patients symptoms and exome (no biometry)
     """
 
-    def __init__(self, case='?', gene='?', gestalt=0, feature=0, cadd_phred=0, phenomizer=0, boqa=0, pathogenicity=0, pedia=-5, extom=-5):
+    def __init__(self, case='?', gene='?', gestalt=0, feature=0, cadd_phred=0, phenomizer=0, boqa=0, pathogenicity=0,
+                 pedia=-5, extom=-5, cada=0):
         self.case = case
         self.gene = gene
         self.gestalt = gestalt
@@ -36,6 +37,7 @@ class Sample(object):
         self.cadd_phred = cadd_phred
         self.phenomizer = phenomizer
         self.boqa = boqa
+        self.cada = cada
         self.pathogenicity = pathogenicity
         self.pedia = pedia
         self.extom = extom
@@ -45,6 +47,7 @@ class Sample(object):
         """
         clf = joblib.load('pedia_classifier.pkl')
         scaler = joblib.load('pedia_scaler.pkl')
-        pedia = float(clf.decision_function(scaler.transform(np.array([self.gestalt, self.feature, self.cadd_phred, self.phenomizer, self.boqa]))))
+        pedia = float(clf.decision_function(scaler.transform(np.array([self.gestalt, self.feature, self.cadd_phred,
+                                                                       self.phenomizer, self.boqa, self.cada]))))
         print(pedia)
 
