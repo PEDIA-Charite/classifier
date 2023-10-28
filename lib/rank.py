@@ -66,7 +66,7 @@ def rank(pedia, path, fold=None, config_data=None):
     with open(filename, 'w') as csvfile:
         writer = csv.writer(csvfile)
         rank = 1
-        max_count = max(max(total_counts), 11) if total_counts else 11
+        max_count = max(max(total_counts), 31) if total_counts else 31
         for i in range(1, max_count + 1):
             writer.writerow([rank, total_counts[i]])
             tmp += total_counts[i]
@@ -74,7 +74,10 @@ def rank(pedia, path, fold=None, config_data=None):
                 if rank == 1:
                     logger.info('Rank 1: %d', total_counts[i])
                 if rank == 10:
+                    top_10 = tmp
                     logger.info('Rank 2-10: %d', tmp-total_counts[1])
+                if rank == 30:
+                    logger.info('Rank 11-30: %d', tmp-top_10)
             rank += 1
 
 def rank_all_cv(lab, path, repetition):
@@ -115,6 +118,8 @@ def rank_all_cv(lab, path, repetition):
                 logger.info('Rank 1: %f', tmp)
             if rank == 10:
                 logger.info('Rank 2-10: %f', tmp-avg[0])
+            if rank == 30:
+                logger.info('Rank 11-30: %d', tmp-avg[9])
             rank += 1
 
 def rank_tuning(lab, path, config_data):

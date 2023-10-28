@@ -29,6 +29,10 @@ class Data:
     BOQA_IDX = 3
     PHENO_IDX = 4
     CADA_IDX = 5
+    LIRICAL_IDX = 6
+    XRARE_IDX = 7
+    EXOME_IDX = 8
+    AMELIE_IDX = 9
 
     # FEATURE_IDX is for feature vector which contain the above feature score
     # LABEL_IDX is for pathogenic gene label (0, 1)
@@ -42,7 +46,9 @@ class Data:
         self.data = {}
         # Filter dict
         self.filter_dict = {0: "feature_score", 1: "cadd_score", 2: "gestalt_score",
-                            3: "boqa_score", 4: "pheno_score", 5: "cada_score"}
+                            3: "boqa_score", 4: "pheno_score", 5: "cada_score",
+                            6: "lirical_score", 7: "xrare_score", 8: "exomizer_score", 9: "amelie_score"
+                            }
 
     def loadData(self, input_file, filter_field=None):
         filter_cases = []
@@ -60,13 +66,16 @@ class Data:
                 gene_name = self.data[case][self.GENE_NAME_IDX]
 
                 x.append([row["feature_score"], row["cadd_score"], row["gestalt_score"],
-                          row["boqa_score"], row["pheno_score"], row["cada_score"]])
+                          row["boqa_score"], row["pheno_score"], row["cada_score"],
+                          row["lirical_score"], row["xrare_score"], row["exomizer_score"],
+                          row["amelie_score"]
+                ])
                 y.append(int(row["label"]))
                 gene.append(row["gene_id"])
                 gene_name.append(row["gene_symbol"])
                 # filter the sample which has no the feature we assigned
                 if filter_field != None:
-                    if int(row["label"]) == 1:
+                    if int(row["label"]) == 1 and 'train' in input_file:
                         if row[self.filter_dict[filter_field[0]]] == 'nan' or row[self.filter_dict[filter_field[0]]] == '0':
                             logger.debug("%s - %s has no %s score", case, row["gene_symbol"], self.filter_dict[filter_field[0]])
                             filter_cases.append(case)

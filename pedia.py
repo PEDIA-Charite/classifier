@@ -4,7 +4,8 @@ Created on Mon Feb 20 09:56:23 2017
 
 @author: Martin
 """
-
+#  python pedia.py ../PEDIA_lirical_gestalt_matcher_input/all_scores 1KG -c 10 -e 0_1_2_3_4_5_7_8_9 -o pedia_lirical_only_c
+# python pedia.py ../PEDIA_lirical_gestalt_matcher_input/all_scores 1KG -c 10 -e 0_1_3_4_5_7_8_9 -o pedia_lirical_gestalt_cv
 import os
 import numpy as np
 import sys
@@ -14,6 +15,7 @@ import logging
 import pickle
 from lib.data import Data
 from lib.classifier import *
+from lib.json_to_table import parse_csv
 from lib.json_to_table import parse_json
 from lib.json_to_table import parse_json_stdin
 from lib.rank import *
@@ -31,7 +33,7 @@ def parse_arguments(parser):
     parser.add_argument('-o', '--output', default=".", help='Path of output')
     parser.add_argument('-c', '--cv', type=int, help='Enable k-fold cross validation. Default 10-fold')
     parser.add_argument('-l', '--loocv', action='store_true', help='Enable group leave one out cross validation')
-    parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO. If features are more than one, use _ to separate them.')
+    parser.add_argument('-e', '--exclude', help='Exclude specific feature. 0: Feature match, 1: CADD, 2: Gestalt, 3: BOQA, 4: PHENO, 5: CADA, 6: Lirical, 7: Erare, 8: exomizer. 9: Amelie, If features are more than one, use _ to separate them.')
     parser.add_argument('-g', '--graph', help='Enable manhattan plot and the path to geneposition file')
     parser.add_argument('-s', '--server', action='store_true', help='Enable server mode')
     parser.add_argument('-p', '--param-tuning-fold', type=int, help='Enable parameter tuning mode')
@@ -181,7 +183,8 @@ def main():
     if mode == TEST_MODE:
         if running_mode == NORMAL_MODE:
             logger.info("Parse testing json files from %s", test_path)
-            parse_json(test_path, test_file)
+            #parse_json(test_path, test_file)
+            parse_csv(test_path, test_file)
         else:
             logger.info("Parse testing json file from stdin")
             parse_json_stdin(test_file)

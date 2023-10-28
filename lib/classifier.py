@@ -110,7 +110,7 @@ def classify(train_data, test_data, path, config_data, cv_fold=None, rand_num=1,
         else:
             json_path = os.path.join(config_data['train_path'], str(case) + '.json')
         # Append pedia results to original JSON file, then store in new_json_filename
-        mapping(json_path, new_json_filename, filename, config_data)
+        #mapping(json_path, new_json_filename, filename, config_data)
 
     if cv_fold != None:
         rank(pedia, path, str(cv_fold))
@@ -128,6 +128,10 @@ def write_df_to_csv(df, filename):
             'boqa_score',
             'pheno_score',
             'cada_score',
+            'lirical_score',
+            'xrare_score',
+            'exomizer_score',
+            'amelie_score',
             'label'
             ]
     df.to_csv(filename, sep=',', index=False, columns=fieldnames)
@@ -146,7 +150,11 @@ def pedia_df(score, test_data, test_X, case, filter_feature):
         'gestalt_score',
         'boqa_score',
         'pheno_score',
-        'cada_score'
+        'cada_score',
+        'lirical_score',
+        'xrare_score',
+        'exomizer_score',
+        'amelie_score'
         ])
 
     feature_df = pd.DataFrame(
@@ -187,6 +195,7 @@ def param_tuning(X, y, group, config_data, rand_num):
 
             # Train classifier
             X_features = X_train
+
             clf = svm.LinearSVC(C=param[0], class_weight='balanced',loss='hinge', random_state=rand_num)
             clf.fit(X_features, y_train)
             fold_count += 1
@@ -197,11 +206,13 @@ def param_tuning(X, y, group, config_data, rand_num):
 
             for case in test_case:
                 test_idx = [np.where(test_group==case)]
-                x_case_test = X_test[test_idx][0]
-                y_case_test = y_test[test_idx][0]
+                #print(X_test.shape)
+                x_case_test = X_test[test_idx][0][0]
+                y_case_test = y_test[test_idx][0][0]
 
                 score = []
                 X_test_feature = x_case_test
+                #print(X_test_feature.shape)
                 score = clf.decision_function(X_test_feature)
 
                 score = np.array(score)
