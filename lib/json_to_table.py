@@ -60,6 +60,7 @@ def parse_csv(input_dir, outputfile):
         gene_name_flag = True
 
     for filename in file_array:
+        logger.info("Parsing %s", filename)
         found = False
         geneIDs = []
         data = pd.read_csv(filename)
@@ -120,6 +121,7 @@ def parse_csv(input_dir, outputfile):
                 xrareScore = max(boqaScore,value["xrare_score"])
                 exomizerScore = max(phenoScore,value["exomizer_score"])
                 amelieScore = max(cadaScore,value["amelie_score"])
+            filter_score = caddPhredScore
             if 'amelie' in input_dir:
                 filter_score = amelieScore
             if 'xrare' in input_dir:
@@ -152,6 +154,12 @@ def parse_csv(input_dir, outputfile):
         for key, value in hashedData.items():
             writer.writerow(value)
 
+def get_test_file(json_input, input_dir):
+    meta = ['gene_name', 'gene_id', 'cada_score', 'cadd_score', 'gestalt_score', 'label']
+    data1 = pd.json_normalize(json_input['genes'])
+    file_name = 'test_file'
+    data1.to_csv(os.path.join(input_dir, file_name) +'.csv', index=False, columns=meta)
+    return file_name
 
 def parse_json(input_dir, outputfile):
     hashedData = {}

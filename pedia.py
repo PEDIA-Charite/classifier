@@ -18,9 +18,12 @@ from lib.classifier import *
 from lib.json_to_table import parse_csv
 from lib.json_to_table import parse_json
 from lib.json_to_table import parse_json_stdin
+from lib.json_to_table import get_test_file
 from lib.rank import *
 from lib.version import __version__
 from lib.constants import *
+import pandas as pd
+import json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -180,6 +183,8 @@ def main():
     running_mode = config_data['running_mode']
     output_path = config_data['output_path']
 
+    logger.info("mode ==%s", mode)
+    logger.info("running_mode ==%s", running_mode)
     if mode == TEST_MODE:
         if running_mode == NORMAL_MODE:
             logger.info("Parse testing json files from %s", test_path)
@@ -258,6 +263,51 @@ def main():
                 manhattan_all(pedia, path, config_data['pos_file'])
         rank_all_cv(train_label, output_path, config_data['cv_rep'])
 
+def setup_training(config_data):
+
+    parse_json(config_data['train_path'], config_data['train_file'])
+
+    # Load training data and testing data
+    train_data = Data()
+    filter_feature = None
+    config_data['param_c'] = 1
+    config_data['exclude_feature'] = [0, 3, 4, 6, 7, 8, 9]
+
+    train_data.loadData(config_data['train_file'], filter_feature)
+
+    return train_data
+
+def generate_pedia_scores(json_input, config_data, train_data):
+
+    mode = TEST_MODE
+
+    logger.info("mode ==%s", mode)
+    if mode == TEST_MODE:
+
+            output_file_name = get_test_file(json_input, config_data["test_path"])
+            parse_csv(config_data["test_path"], config_data["test_file"])
+
+
+    filter_feature = None
+    # Train classifier by training set and test on testing set
+    # Return pedia which contain pedia score, label and gene id
+    # We can add filter_feature to remove the feature we don't want
+    # to be trained by the classifier. For example
+    # filter_feature = [FM_IDX, GESTALT_IDX]
+    if mode == TEST_MODE:
+        train = train_data.data
+
+        test_data = Data()
+        test_data.loadData(config_data["test_file"], filter_feature)
+        test = test_data.data
+        pedia = classify_test(train, test, config_data["output_path"], config_data)
+
+        rank(pedia, config_data["output_path"])
+
+    df = pd.read_csv(os.path.join(config_data["output_path"], output_file_name) + '.csv')
+    res = df.to_json(orient="records")
+    parsed = json.loads(res)
+    return parsed
 
 if __name__ == '__main__':
     main()
