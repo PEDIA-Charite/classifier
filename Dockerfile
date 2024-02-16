@@ -11,8 +11,8 @@ COPY pedia.py ./pedia.py
 
 COPY lib ./lib
 COPY train ./train
-RUN mkdir -p ./input
-RUN mkdir -p ./output
+COPY input ./input
+COPY output ./output
 
 
 CMD [ "uvicorn",  "main:app", "--host", "0.0.0.0", "--port", "9000" ]

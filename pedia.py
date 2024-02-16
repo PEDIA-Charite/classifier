@@ -265,6 +265,13 @@ def main():
 
 def setup_training(config_data):
 
+    path = config_data['test_path']
+    if not os.path.exists(path):
+        os.makedirs(path)
+    path = config_data['output_path']
+    if not os.path.exists(path):
+        os.makedirs(path)
+
     parse_json(config_data['train_path'], config_data['train_file'])
 
     # Load training data and testing data
@@ -272,7 +279,8 @@ def setup_training(config_data):
     filter_feature = None
     config_data['param_c'] = 1
     config_data['exclude_feature'] = [0, 3, 4, 6, 7, 8, 9]
-
+    config_data['graph_mode'] = GRAPH
+    config_data['pos_file'] = "lib/allgenepositions.txt"
     train_data.loadData(config_data['train_file'], filter_feature)
 
     return train_data
@@ -280,11 +288,17 @@ def setup_training(config_data):
 def generate_pedia_scores(json_input, config_data, train_data):
 
     mode = TEST_MODE
+    graph_mode = config_data['graph_mode']
+    output_path = config_data['output_path']
+    if graph_mode == GRAPH:
+        from lib.draw import manhattan
+        from lib.draw import manhattan_all
 
     logger.info("mode ==%s", mode)
     if mode == TEST_MODE:
 
             output_file_name = get_test_file(json_input, config_data["test_path"])
+            config_data["test_file"] = json_input['case_name']
             parse_csv(config_data["test_path"], config_data["test_file"])
 
 
@@ -303,6 +317,9 @@ def generate_pedia_scores(json_input, config_data, train_data):
         pedia = classify_test(train, test, config_data["output_path"], config_data)
 
         rank(pedia, config_data["output_path"])
+
+        if graph_mode == GRAPH:
+            manhattan(pedia, output_path, config_data['pos_file'], json_input['case_name'])
 
     df = pd.read_csv(os.path.join(config_data["output_path"], output_file_name) + '.csv')
     res = df.to_json(orient="records")

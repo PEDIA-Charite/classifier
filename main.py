@@ -4,7 +4,6 @@ from fastapi import FastAPI, Request
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import List
-import pandas as pd
 from pedia import generate_pedia_scores, setup_training
 import json
 
@@ -20,8 +19,9 @@ config_data = {
     'output_path': output_path,
     'train_file': os.path.join(output_path, "train.csv"),
     'test_path': test_path,
-    'param_fold': 0,
-    'mode': 0, 'test_file': test_file
+    'param_fold': 5,
+    'mode': 0,
+    'test_file': test_file
 }
 train_data = None
 class GeneBase(BaseModel):
@@ -36,8 +36,8 @@ class GeneList(BaseModel):
     genes: List[GeneBase]
 
 class Case(BaseModel):
-    case: str 
-    data: List[GeneBase]
+    case_name: str
+    genes: List[GeneBase]
 
 class CaseList(BaseModel): 
     cases: List[Case]
@@ -54,8 +54,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 @app.post("/pedia")
-async def get_scores_endpoint(genes: GeneList):
-    json_input = json.loads(genes.json())
+async def get_scores_endpoint(case: Case):
+    json_input = json.loads(case.json())
 
     output = generate_pedia_scores(json_input, config_data, train_data)
     return output

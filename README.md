@@ -296,3 +296,22 @@ check the original JSON file.
       ]
   }
 ```
+## PEDIA REST api
+We can host the classifier as a service via REST api. You can build the Docker image and host PEDIA classifier service in your local machine.
+### Requirements
+Please contact us to obtain the training files and store them in the 'train' directory.
+Create two directories named 'input' and 'output' in the root directory of the project to store the input and output files.  
+
+
+
+### Build and run docker image
+Build docker image: 
+```
+docker build -t pedia-classifier-api .
+```
+
+Run and listen the request in localhost:9000
+```
+docker run -p 9000:9000 pedia-classifier-api
+```
+

@@ -157,7 +157,7 @@ def parse_csv(input_dir, outputfile):
 def get_test_file(json_input, input_dir):
     meta = ['gene_name', 'gene_id', 'cada_score', 'cadd_score', 'gestalt_score', 'label']
     data1 = pd.json_normalize(json_input['genes'])
-    file_name = 'test_file'
+    file_name = json_input['case_name']
     data1.to_csv(os.path.join(input_dir, file_name) +'.csv', index=False, columns=meta)
     return file_name
 
