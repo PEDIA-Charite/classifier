@@ -52,10 +52,10 @@ def manhattan(pedia, path, pos_file, ID='all'):
         np_names_y = []
         if case == ID or ID == 'all':
             smpl_case = case
-            score = np.array(pedia[case][0])
-            pathogenicity = np.array(pedia[case][1])
-            gene = np.array(pedia[case][3])
-            length = len(score)
+            score = np.array(pedia[case]['pedia_score'])
+            pathogenicity = np.array(pedia[case]['label'])
+            gene = np.array(pedia[case]['gene_name'])
+            length = len(score) 
             rank = 0
             for index in range(length):
                 rank += 1
@@ -134,7 +134,7 @@ def manhattan(pedia, path, pos_file, ID='all'):
                 tick += (i / 2) + 10 ** 6
             plt.xticks(ticks)
             plt.ylabel('PEDIA score', fontsize=38)
-            plt.legend(loc='center left', prop={'size':23}, bbox_to_anchor=(1,0.5))
+            plt.legend(loc='best', prop={'size':23}, bbox_to_anchor=(1,0.5))
             frame1 = plt.gca()
             chr_names = []
 
@@ -163,8 +163,9 @@ def manhattan(pedia, path, pos_file, ID='all'):
             path = os.path.join(path, 'figures')
             if not os.path.exists(path):
                 os.makedirs(path)
-            filename = path + "/manhattan_" + ID + ".png"
-            plt.savefig(filename)
+            filename = path + "/manhattan_" + ID
+            print("saving Manhatten plot at " + filename)
+            plt.savefig(filename + ".svg")
             plt.close()
 
 
@@ -188,9 +189,9 @@ def manhattan_all(pedia, path, pos_file):
     for case in pedia:
 
         smpl_case = case
-        score = np.array(pedia[case][0])
-        pathogenicity = np.array(pedia[case][1])
-        gene = np.array(pedia[case][3])
+        score = np.array(pedia[case]['pedia_score'])
+        pathogenicity = np.array(pedia[case]['label'])
+        gene = np.array(pedia[case]['gene_name'])
         length = len(score)
         for index in range(length):
             gene_symbol = gene[index]
